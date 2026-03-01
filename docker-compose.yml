@@ -1,0 +1,38 @@
+services:
+  backend:
+    build: ./backend
+    container_name: lab_backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      # Variáveis do banco (você vai usar depois no FastAPI)
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: labdb
+      DB_USER: labuser
+      DB_PASSWORD: labpass
+
+  db:
+    image: postgres:16
+    container_name: lab_db
+    environment:
+      POSTGRES_DB: labdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  frontend:
+    build: ./frontend
+    container_name: lab_frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
