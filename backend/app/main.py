@@ -3,15 +3,15 @@ from pydantic import BaseModel
 
 app = FastAPI(title="Backend - Projeto Lab Prog III")
 
-#Checagem de status
-@app.get("/health")
-def health():
+# Checagem de status
+@app.get("/healthcheck")
+def healthcheck():
     return {"status": "ok"}
 
-#Autenticação
+# Autenticação
 usuarios = []
 
-#Cadastro
+# Cadastro
 class CadastroRequest(BaseModel):
     email: str
     nome: str
@@ -41,8 +41,8 @@ def cadastro(dados: CadastroRequest):
         }
     }
 
-#LogIn
-class LoginRequest(BaseModel): #Modelo de JSON enviado pelo usuario
+# Login
+class LoginRequest(BaseModel):
     email: str
     senha: str
 
@@ -54,9 +54,8 @@ def login(dados: LoginRequest):
                 "mensagem": "Login realizado com sucesso",
                 "usuario": usuario["nome"]
             }
-        
+
     raise HTTPException(
         status_code=401,
         detail="Email ou senha inválidos"
     )
-

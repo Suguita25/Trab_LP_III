@@ -7,12 +7,11 @@ services:
     depends_on:
       - db
     environment:
-      # Variáveis do banco (você vai usar depois no FastAPI)
       DB_HOST: db
       DB_PORT: 5432
       DB_NAME: labdb
-      DB_USER: labuser
-      DB_PASSWORD: labpass
+      DB_USER: postgres
+      DB_PASSWORD: postgres
 
   db:
     image: postgres:16
