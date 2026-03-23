@@ -1,61 +1,110 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from fastapi import FastAPI, HTTPException, Depends
+from sqlalchemy.orm import Session
+from .database import SessionLocal, engine, Base
+from .models import Usuario
+from .schemas import UsuarioCreate, UsuarioLogin, UsuarioUpdate, UsuarioResponse
 
 app = FastAPI(title="Backend - Projeto Lab Prog III")
 
-#Checagem de status
-@app.get("/health")
-def health():
+# cria as tabelas no banco
+Base.metadata.create_all(bind=engine)
+
+# dependência para abrir/fechar sessão com o banco
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+# healthcheck
+@app.get("/healthcheck")
+def healthcheck():
     return {"status": "ok"}
 
-#Autenticação
-usuarios = []
+# cadastro
+@app.post("/cadastro", response_model=UsuarioResponse)
+def cadastro(dados: UsuarioCreate, db: Session = Depends(get_db)):
+    usuario_existente = db.query(Usuario).filter(Usuario.email == dados.email).first()
 
-#Cadastro
-class CadastroRequest(BaseModel):
-    email: str
-    nome: str
-    senha: str
+    if usuario_existente:
+        raise HTTPException(
+            status_code=400,
+            detail="E-mail já cadastrado"
+        )
 
-@app.post("/cadastro")
-def cadastro(dados: CadastroRequest):
-    for usuario in usuarios:
-        if usuario["email"] == dados.email:
-            raise HTTPException(
-                status_code=400,
-                detail="E-mail já cadastrado"
-            )
-    novo_usuario = {
-        "email": dados.email,
-        "nome": dados.nome,
-        "senha": dados.senha
-    }
+    novo_usuario = Usuario(
+        nome=dados.nome,
+        email=dados.email,
+        senha=dados.senha
+    )
 
-    usuarios.append(novo_usuario)
+    db.add(novo_usuario)
+    db.commit()
+    db.refresh(novo_usuario)
 
-    return {
-        "mensagem": "Usuário cadastrado com sucesso",
-        "usuario": {
-            "nome": dados.nome,
-            "email": dados.email
-        }
-    }
+    return novo_usuario
 
-#LogIn
-class LoginRequest(BaseModel): #Modelo de JSON enviado pelo usuario
-    email: str
-    senha: str
-
+# login
 @app.post("/login")
-def login(dados: LoginRequest):
-    for usuario in usuarios:
-        if usuario["email"] == dados.email and usuario["senha"] == dados.senha:
-            return {
-                "mensagem": "Login realizado com sucesso",
-                "usuario": usuario["nome"]
-            }
-        
+def login(dados: UsuarioLogin, db: Session = Depends(get_db)):
+    usuario = db.query(Usuario).filter(
+        Usuario.email == dados.email,
+        Usuario.senha == dados.senha
+    ).first()
+
+    if usuario:
+        return {
+            "mensagem": "Login realizado com sucesso",
+            "usuario": usuario.nome
+        }
+
     raise HTTPException(
         status_code=401,
         detail="Email ou senha inválidos"
     )
+
+# listar usuários
+@app.get("/usuarios", response_model=list[UsuarioResponse])
+def listar_usuarios(db: Session = Depends(get_db)):
+    return db.query(Usuario).all()
+
+# buscar usuário por id
+@app.get("/usuarios/{usuario_id}", response_model=UsuarioResponse)
+def buscar_usuario(usuario_id: int, db: Session = Depends(get_db)):
+    usuario = db.query(Usuario).filter(Usuario.id == usuario_id).first()
+
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+
+    return usuario
+
+# atualizar usuário
+@app.put("/usuarios/{usuario_id}", response_model=UsuarioResponse)
+def atualizar_usuario(usuario_id: int, dados: UsuarioUpdate, db: Session = Depends(get_db)):
+    usuario = db.query(Usuario).filter(Usuario.id == usuario_id).first()
+
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+
+    usuario.nome = dados.nome
+    usuario.email = dados.email
+    usuario.senha = dados.senha
+
+    db.commit()
+    db.refresh(usuario)
+
+    return usuario
+
+# deletar usuário
+@app.delete("/usuarios/{usuario_id}")
+def deletar_usuario(usuario_id: int, db: Session = Depends(get_db)):
+    usuario = db.query(Usuario).filter(Usuario.id == usuario_id).first()
+
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+
+    db.delete(usuario)
+    db.commit()
+
+    return {"mensagem": "Usuário removido com sucesso"}

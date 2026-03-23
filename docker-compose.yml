@@ -7,12 +7,11 @@ services:
     depends_on:
       - db
     environment:
-      # Variáveis do banco (você vai usar depois no FastAPI)
       DB_HOST: db
       DB_PORT: 5432
       DB_NAME: labdb
-      DB_USER: labuser
-      DB_PASSWORD: labpass
+      DB_USER: postgres
+      DB_PASSWORD: shawnie
 
   db:
     image: postgres:16
@@ -20,17 +19,21 @@ services:
     environment:
       POSTGRES_DB: labdb
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: shawnie
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+
 
   frontend:
     build: ./frontend
     container_name: lab_frontend
     ports:
-      - "8080:80"
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
     depends_on:
       - backend
 
