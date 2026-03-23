@@ -180,6 +180,7 @@ function getTituloPagina(pagina) {
             {pagina === 'login' && (
               <Login
                 onLogin={handleLogin}
+                onIrCadastro={irParaCadastro}
                 carregando={carregando}
               />
             )}
@@ -187,6 +188,7 @@ function getTituloPagina(pagina) {
             {pagina === 'cadastro' && (
               <Cadastro
                 onCadastro={handleCadastro}
+                onIrLogin={irParaLogin}
                 carregando={carregando}
               />
             )}
