@@ -19,7 +19,7 @@ services:
     environment:
       POSTGRES_DB: labdb
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: shawnie
     ports:
       - "5433:5432"
     volumes:
@@ -30,7 +30,10 @@ services:
     build: ./frontend
     container_name: lab_frontend
     ports:
-      - "8080:80"
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
     depends_on:
       - backend
 
