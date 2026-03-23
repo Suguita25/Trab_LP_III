@@ -11,7 +11,7 @@ services:
       DB_PORT: 5432
       DB_NAME: labdb
       DB_USER: postgres
-      DB_PASSWORD: shawnie
+      DB_PASSWORD: postgres
 
   db:
     image: postgres:16
