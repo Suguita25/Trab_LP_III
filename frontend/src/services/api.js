@@ -22,7 +22,7 @@ async function request(path, options = {}) {
     const mensagemErro =
       (typeof data === 'object' && (data.detail || data.mensagem)) ||
       (typeof data === 'string' && data) ||
-      'Erro na requisição'
+      'Erro na requisicao'
 
     throw new Error(mensagemErro)
   }
@@ -37,10 +37,22 @@ export function loginUsuario({ email, senha }) {
   })
 }
 
-export function cadastrarUsuario({ nome, email, senha }) {
+export function cadastrarUsuario({
+  nome,
+  email,
+  senha,
+  fotoVerificacao,
+  origemFoto,
+}) {
   return request('/cadastro', {
     method: 'POST',
-    body: JSON.stringify({ nome, email, senha }),
+    body: JSON.stringify({
+      nome,
+      email,
+      senha,
+      foto_verificacao: fotoVerificacao,
+      verificacao_origem_foto: origemFoto,
+    }),
   })
 }
 
@@ -48,21 +60,38 @@ export function listarUsuarios() {
   return request('/usuarios')
 }
 
-export async function buscarUsuarioPorEmail(email) {
-  const usuarios = await listarUsuarios()
-  const usuario = usuarios.find((item) => item.email === email)
-
-  if (!usuario) {
-    throw new Error('Usuário não encontrado')
-  }
-
-  return usuario
+export function buscarUsuarioPorEmail(email) {
+  return request(`/usuarios/email/${encodeURIComponent(email)}`)
 }
 
 export function atualizarUsuario(id, { nome, email, senha }) {
   return request(`/usuarios/${id}`, {
     method: 'PUT',
     body: JSON.stringify({ nome, email, senha }),
+  })
+}
+
+export function enviarVerificacaoUsuario(id, { fotoVerificacao, origemFoto }) {
+  return request(`/usuarios/${id}/verificacao`, {
+    method: 'POST',
+    body: JSON.stringify({
+      foto_verificacao: fotoVerificacao,
+      verificacao_origem_foto: origemFoto,
+    }),
+  })
+}
+
+export function listarFotosUsuario(id) {
+  return request(`/usuarios/${id}/fotos`)
+}
+
+export function postarFotoUsuario(id, { foto, origemFoto }) {
+  return request(`/usuarios/${id}/fotos`, {
+    method: 'POST',
+    body: JSON.stringify({
+      foto,
+      origem_foto: origemFoto,
+    }),
   })
 }
 

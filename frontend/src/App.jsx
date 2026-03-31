@@ -1,25 +1,27 @@
 import { useState } from 'react'
-import './App.css'
 
+import './App.css'
 import Header from './components/Header'
 import Sidebar from './components/Sidebar'
-import Login from './pages/Login'
 import Cadastro from './pages/Cadastro'
-import Perfil from './pages/Perfil'
 import HealthCheck from './pages/HealthCheck'
-
+import Login from './pages/Login'
+import Perfil from './pages/Perfil'
 import {
-  loginUsuario,
-  cadastrarUsuario,
-  buscarUsuarioPorEmail,
   atualizarUsuario,
+  buscarUsuarioPorEmail,
+  cadastrarUsuario,
+  enviarVerificacaoUsuario,
   excluirUsuario,
+  listarFotosUsuario,
+  loginUsuario,
+  postarFotoUsuario,
 } from './services/api'
 
 function getTituloPagina(pagina) {
   if (pagina === 'login') return 'Login'
   if (pagina === 'cadastro') return 'Cadastro'
-  if (pagina === 'perfil') return 'Perfil do usuário'
+  if (pagina === 'perfil') return 'Perfil do usuario'
   if (pagina === 'healthcheck') return 'Health Check'
   return 'Sistema'
 }
@@ -27,6 +29,7 @@ function getTituloPagina(pagina) {
 function App() {
   const [pagina, setPagina] = useState('login')
   const [usuarioLogado, setUsuarioLogado] = useState(null)
+  const [fotosUsuario, setFotosUsuario] = useState([])
   const [mensagem, setMensagem] = useState('')
   const [erro, setErro] = useState('')
   const [carregando, setCarregando] = useState(false)
@@ -49,6 +52,7 @@ function App() {
 
   function irParaPerfil() {
     limparFeedback()
+
     if (usuarioLogado) {
       setPagina('perfil')
     }
@@ -62,24 +66,17 @@ function App() {
   function sair() {
     limparFeedback()
     setUsuarioLogado(null)
+    setFotosUsuario([])
     setPagina('login')
   }
 
-function abrirSidebar() {
-  setSidebarAberta(true)
-}
+  function abrirSidebar() {
+    setSidebarAberta(true)
+  }
 
-function fecharSidebar() {
-  setSidebarAberta(false)
-}
-
-function getTituloPagina(pagina) {
-  if (pagina === 'login') return 'Login'
-  if (pagina === 'cadastro') return 'Cadastro'
-  if (pagina === 'perfil') return 'Perfil do usuário'
-  if (pagina === 'healthcheck') return 'Health Check'
-  return 'Sistema'
-}
+  function fecharSidebar() {
+    setSidebarAberta(false)
+  }
 
   async function handleLogin({ email, senha }) {
     limparFeedback()
@@ -88,8 +85,16 @@ function getTituloPagina(pagina) {
     try {
       const respostaLogin = await loginUsuario({ email, senha })
       const usuario = await buscarUsuarioPorEmail(email)
+      let fotos = []
+
+      try {
+        fotos = await listarFotosUsuario(usuario.id)
+      } catch {
+        fotos = []
+      }
 
       setUsuarioLogado(usuario)
+      setFotosUsuario(fotos)
       setPagina('perfil')
       setMensagem(respostaLogin.mensagem || 'Login realizado com sucesso')
     } catch (err) {
@@ -99,14 +104,28 @@ function getTituloPagina(pagina) {
     }
   }
 
-  async function handleCadastro({ nome, email, senha }) {
+  async function handleCadastro({
+    nome,
+    email,
+    senha,
+    fotoVerificacao,
+    origemFoto,
+  }) {
     limparFeedback()
     setCarregando(true)
 
     try {
-      await cadastrarUsuario({ nome, email, senha })
+      await cadastrarUsuario({
+        nome,
+        email,
+        senha,
+        fotoVerificacao,
+        origemFoto,
+      })
       setPagina('login')
-      setMensagem('Cadastro realizado com sucesso. Faça seu login.')
+      setMensagem(
+        'Cadastro realizado com sucesso. Sua foto de verificacao foi enviada para analise. Faca seu login.'
+      )
     } catch (err) {
       setErro(err.message)
     } finally {
@@ -136,6 +155,52 @@ function getTituloPagina(pagina) {
     }
   }
 
+  async function handleEnviarVerificacao({ fotoVerificacao, origemFoto }) {
+    if (!usuarioLogado) return
+
+    limparFeedback()
+    setCarregando(true)
+
+    try {
+      const usuarioAtualizado = await enviarVerificacaoUsuario(usuarioLogado.id, {
+        fotoVerificacao,
+        origemFoto,
+      })
+
+      setUsuarioLogado(usuarioAtualizado)
+      setMensagem('Nova foto de verificacao enviada para analise.')
+    } catch (err) {
+      setErro(err.message)
+      throw err
+    } finally {
+      setCarregando(false)
+    }
+  }
+
+  async function handlePostarFoto({ foto, origemFoto }) {
+    if (!usuarioLogado) return
+
+    limparFeedback()
+    setCarregando(true)
+
+    try {
+      const fotoPublicada = await postarFotoUsuario(usuarioLogado.id, {
+        foto,
+        origemFoto,
+      })
+
+      setFotosUsuario((fotosAtuais) => [fotoPublicada, ...fotosAtuais])
+      setMensagem(
+        'Matching facial aprovado. A foto foi publicada com sucesso.'
+      )
+    } catch (err) {
+      setErro(err.message)
+      throw err
+    } finally {
+      setCarregando(false)
+    }
+  }
+
   async function handleExcluirConta() {
     if (!usuarioLogado) return
 
@@ -146,8 +211,9 @@ function getTituloPagina(pagina) {
       const resposta = await excluirUsuario(usuarioLogado.id)
 
       setUsuarioLogado(null)
+      setFotosUsuario([])
       setPagina('login')
-      setMensagem(resposta.mensagem || 'Conta excluída com sucesso.')
+      setMensagem(resposta.mensagem || 'Conta excluida com sucesso.')
     } catch (err) {
       setErro(err.message)
     } finally {
@@ -195,8 +261,18 @@ function getTituloPagina(pagina) {
 
             {pagina === 'perfil' && usuarioLogado && (
               <Perfil
+                key={[
+                  usuarioLogado.id,
+                  usuarioLogado.nome,
+                  usuarioLogado.email,
+                  usuarioLogado.verificacao_status,
+                  usuarioLogado.verificacao_data_envio || 'sem-envio',
+                ].join(':')}
                 usuario={usuarioLogado}
+                fotos={fotosUsuario}
                 onSalvarEdicao={handleSalvarEdicao}
+                onEnviarVerificacao={handleEnviarVerificacao}
+                onPostarFoto={handlePostarFoto}
                 onExcluirConta={handleExcluirConta}
                 onSair={sair}
                 carregando={carregando}

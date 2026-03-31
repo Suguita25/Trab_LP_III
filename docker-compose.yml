@@ -19,7 +19,7 @@ services:
     environment:
       POSTGRES_DB: labdb
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: shawnie
+      POSTGRES_PASSWORD: postgres
     ports:
       - "5433:5432"
     volumes:
