@@ -31,9 +31,15 @@ function formatarData(data) {
   }).format(new Date(data))
 }
 
+function calcularPercentual(atual, total) {
+  if (!total) return 0
+  return (atual / total) * 100
+}
+
 function Perfil({
   usuario,
   fotos,
+  resumoGamificacao,
   onSalvarEdicao,
   onEnviarVerificacao,
   onPostarFoto,
@@ -57,6 +63,13 @@ function Perfil({
   const [origemFotoPostagem, setOrigemFotoPostagem] = useState('')
   const [erroVerificacaoLocal, setErroVerificacaoLocal] = useState('')
   const [erroPostagemLocal, setErroPostagemLocal] = useState('')
+
+  const progresso = resumoGamificacao || {
+    totalLocais: 0,
+    locaisDesbloqueados: 0,
+    pontosTotaisUsuario: 0,
+    totalPontosPossiveis: 0,
+  }
 
   async function handleSubmitDados(e) {
     e.preventDefault()
@@ -309,13 +322,64 @@ function Perfil({
         <p>
           <strong>E-mail:</strong> {usuario.email}
         </p>
+        <p>
+          <strong>Pontos totais:</strong>{' '}
+          {usuario.pontos_totais ?? progresso.pontosTotaisUsuario}
+        </p>
+      </div>
+
+      <div className="progresso-gamificacao">
+        <div className="progresso-gamificacao__topo">
+          <h2>Seu progresso</h2>
+        </div>
+
+        <div className="progresso-gamificacao__item">
+          <div className="progresso-gamificacao__linha">
+            <span>Locais desbloqueados</span>
+            <strong>
+              {progresso.locaisDesbloqueados} / {progresso.totalLocais}
+            </strong>
+          </div>
+          <div className="progresso-gamificacao__barra">
+            <div
+              className="progresso-gamificacao__preenchimento"
+              style={{
+                width: `${calcularPercentual(
+                  progresso.locaisDesbloqueados,
+                  progresso.totalLocais
+                )}%`,
+              }}
+            />
+          </div>
+        </div>
+
+        <div className="progresso-gamificacao__item">
+          <div className="progresso-gamificacao__linha">
+            <span>Pontos acumulados</span>
+            <strong>
+              {progresso.pontosTotaisUsuario} / {progresso.totalPontosPossiveis}
+            </strong>
+          </div>
+          <div className="progresso-gamificacao__barra">
+            <div
+              className="progresso-gamificacao__preenchimento"
+              style={{
+                width: `${calcularPercentual(
+                  progresso.pontosTotaisUsuario,
+                  progresso.totalPontosPossiveis
+                )}%`,
+              }}
+            />
+          </div>
+        </div>
       </div>
 
       <div className="verificacao-box verificacao-box-status">
         <div className="verificacao-topo">
           <h2>Verificacao de identidade</h2>
           <p>
-            Envie uma foto sua pela camera do notebook ou anexando uma imagem da galeria.
+            Envie uma foto sua pela camera do notebook ou anexando uma imagem da
+            galeria.
           </p>
         </div>
 
@@ -331,7 +395,8 @@ function Perfil({
             {formatarOrigemFoto(usuario.verificacao_origem_foto)}
           </p>
           <p>
-            <strong>Ultimo envio:</strong> {formatarData(usuario.verificacao_data_envio)}
+            <strong>Ultimo envio:</strong>{' '}
+            {formatarData(usuario.verificacao_data_envio)}
           </p>
         </div>
 
@@ -344,7 +409,8 @@ function Perfil({
             />
             <div className="foto-preview-meta">
               <p>
-                Esta e a foto oficial usada como referencia para liberar novas publicacoes.
+                Esta e a foto oficial usada como referencia para liberar novas
+                publicacoes.
               </p>
               <p>
                 Toda foto postada passa por matching facial antes de ser aceita.
@@ -361,7 +427,6 @@ function Perfil({
       <div className="verificacao-box">
         <div className="verificacao-topo">
           <h2>Minhas fotos</h2>
-
         </div>
 
         {fotos.length > 0 ? (
@@ -375,10 +440,12 @@ function Perfil({
                 />
                 <div className="foto-publicada-meta">
                   <p>
-                    <strong>Publicada em:</strong> {formatarData(foto.data_postagem)}
+                    <strong>Publicada em:</strong>{' '}
+                    {formatarData(foto.data_postagem)}
                   </p>
                   <p>
-                    <strong>Matching:</strong> {foto.modelo_match} liberou a postagem
+                    <strong>Matching:</strong> {foto.modelo_match} liberou a
+                    postagem
                   </p>
                 </div>
               </article>

@@ -6,6 +6,7 @@ import Sidebar from './components/Sidebar'
 import Cadastro from './pages/Cadastro'
 import HealthCheck from './pages/HealthCheck'
 import Login from './pages/Login'
+import MapaGamificado from './pages/MapaGamificado'
 import Perfil from './pages/Perfil'
 import {
   atualizarUsuario,
@@ -17,12 +18,14 @@ import {
   loginUsuario,
   postarFotoUsuario,
 } from './services/api'
+import { getLocations, getUnlockedPoints } from './services/gamificationApi'
 
 function getTituloPagina(pagina) {
   if (pagina === 'login') return 'Login'
   if (pagina === 'cadastro') return 'Cadastro'
   if (pagina === 'perfil') return 'Perfil do usuario'
   if (pagina === 'healthcheck') return 'Health Check'
+  if (pagina === 'mapa-gamificado') return 'Mapa Gamificado'
   return 'Sistema'
 }
 
@@ -35,9 +38,71 @@ function App() {
   const [carregando, setCarregando] = useState(false)
   const [sidebarAberta, setSidebarAberta] = useState(false)
 
+  const [resumoGamificacao, setResumoGamificacao] = useState({
+    totalLocais: 0,
+    locaisDesbloqueados: 0,
+    pontosTotaisUsuario: 0,
+    totalPontosPossiveis: 0,
+  })
+
   function limparFeedback() {
     setMensagem('')
     setErro('')
+  }
+
+  function resetarResumoGamificacao() {
+    setResumoGamificacao({
+      totalLocais: 0,
+      locaisDesbloqueados: 0,
+      pontosTotaisUsuario: 0,
+      totalPontosPossiveis: 0,
+    })
+  }
+
+  async function carregarResumoGamificacao(usuarioId, pontosTotaisUsuario = 0) {
+    try {
+      const [locations, desbloqueios] = await Promise.all([
+        getLocations(),
+        getUnlockedPoints(usuarioId),
+      ])
+
+      const totalPontosPossiveis = locations.reduce(
+        (acc, location) => acc + (location.pontos_valor || 0),
+        0
+      )
+
+      setResumoGamificacao({
+        totalLocais: locations.length,
+        locaisDesbloqueados: desbloqueios.pontos_desbloqueados?.length || 0,
+        pontosTotaisUsuario,
+        totalPontosPossiveis,
+      })
+    } catch (err) {
+      console.error('erro ao carregar resumo de gamificacao:', err)
+    }
+  }
+
+  function atualizarResumoGamificacao({
+    pontosTotaisUsuario,
+    locaisDesbloqueados,
+  }) {
+    setResumoGamificacao((prev) => ({
+      ...prev,
+      pontosTotaisUsuario:
+        pontosTotaisUsuario ?? prev.pontosTotaisUsuario,
+      locaisDesbloqueados:
+        locaisDesbloqueados ?? prev.locaisDesbloqueados,
+    }))
+
+    setUsuarioLogado((prev) =>
+      prev
+        ? {
+            ...prev,
+            pontos_totais:
+              pontosTotaisUsuario ?? prev.pontos_totais,
+          }
+        : prev
+    )
   }
 
   function irParaLogin() {
@@ -63,10 +128,16 @@ function App() {
     setPagina('healthcheck')
   }
 
+  function irParaMapaGamificado() {
+    limparFeedback()
+    setPagina('mapa-gamificado')
+  }
+
   function sair() {
     limparFeedback()
     setUsuarioLogado(null)
     setFotosUsuario([])
+    resetarResumoGamificacao()
     setPagina('login')
   }
 
@@ -95,6 +166,7 @@ function App() {
 
       setUsuarioLogado(usuario)
       setFotosUsuario(fotos)
+      await carregarResumoGamificacao(usuario.id, usuario.pontos_totais || 0)
       setPagina('perfil')
       setMensagem(respostaLogin.mensagem || 'Login realizado com sucesso')
     } catch (err) {
@@ -212,6 +284,7 @@ function App() {
 
       setUsuarioLogado(null)
       setFotosUsuario([])
+      resetarResumoGamificacao()
       setPagina('login')
       setMensagem(resposta.mensagem || 'Conta excluida com sucesso.')
     } catch (err) {
@@ -220,6 +293,12 @@ function App() {
       setCarregando(false)
     }
   }
+
+  const paginaUsaBoxPequeno =
+    pagina === 'login' ||
+    pagina === 'cadastro' ||
+    pagina === 'perfil' ||
+    pagina === 'healthcheck'
 
   return (
     <div className="layout">
@@ -232,6 +311,7 @@ function App() {
         onIrCadastro={irParaCadastro}
         onIrPerfil={irParaPerfil}
         onIrHealthcheck={irParaHealthcheck}
+        onIrMapaGamificado={irParaMapaGamificado}
         onSair={sair}
       />
 
@@ -242,48 +322,59 @@ function App() {
         />
 
         <main className="conteudo">
-          <div className="login-box">
-            {pagina === 'login' && (
-              <Login
-                onLogin={handleLogin}
-                onIrCadastro={irParaCadastro}
-                carregando={carregando}
-              />
-            )}
+          {paginaUsaBoxPequeno ? (
+            <div className="login-box">
+              {pagina === 'login' && (
+                <Login
+                  onLogin={handleLogin}
+                  onIrCadastro={irParaCadastro}
+                  carregando={carregando}
+                />
+              )}
 
-            {pagina === 'cadastro' && (
-              <Cadastro
-                onCadastro={handleCadastro}
-                onIrLogin={irParaLogin}
-                carregando={carregando}
-              />
-            )}
+              {pagina === 'cadastro' && (
+                <Cadastro
+                  onCadastro={handleCadastro}
+                  onIrLogin={irParaLogin}
+                  carregando={carregando}
+                />
+              )}
 
-            {pagina === 'perfil' && usuarioLogado && (
-              <Perfil
-                key={[
-                  usuarioLogado.id,
-                  usuarioLogado.nome,
-                  usuarioLogado.email,
-                  usuarioLogado.verificacao_status,
-                  usuarioLogado.verificacao_data_envio || 'sem-envio',
-                ].join(':')}
-                usuario={usuarioLogado}
-                fotos={fotosUsuario}
-                onSalvarEdicao={handleSalvarEdicao}
-                onEnviarVerificacao={handleEnviarVerificacao}
-                onPostarFoto={handlePostarFoto}
-                onExcluirConta={handleExcluirConta}
-                onSair={sair}
-                carregando={carregando}
-              />
-            )}
+              {pagina === 'perfil' && usuarioLogado && (
+                <Perfil
+                  key={[
+                    usuarioLogado.id,
+                    usuarioLogado.nome,
+                    usuarioLogado.email,
+                    usuarioLogado.verificacao_status,
+                    usuarioLogado.verificacao_data_envio || 'sem-envio',
+                    usuarioLogado.pontos_totais || 0,
+                    resumoGamificacao.locaisDesbloqueados,
+                  ].join(':')}
+                  usuario={usuarioLogado}
+                  fotos={fotosUsuario}
+                  resumoGamificacao={resumoGamificacao}
+                  onSalvarEdicao={handleSalvarEdicao}
+                  onEnviarVerificacao={handleEnviarVerificacao}
+                  onPostarFoto={handlePostarFoto}
+                  onExcluirConta={handleExcluirConta}
+                  onSair={sair}
+                  carregando={carregando}
+                />
+              )}
 
-            {pagina === 'healthcheck' && <HealthCheck />}
+              {pagina === 'healthcheck' && <HealthCheck />}
 
-            {mensagem && <p className="sucesso">{mensagem}</p>}
-            {erro && <p className="erro">{erro}</p>}
-          </div>
+              {mensagem && <p className="sucesso">{mensagem}</p>}
+              {erro && <p className="erro">{erro}</p>}
+            </div>
+          ) : (
+            <MapaGamificado
+              usuarioLogado={usuarioLogado}
+              resumoGamificacao={resumoGamificacao}
+              onAtualizarResumoGamificacao={atualizarResumoGamificacao}
+            />
+          )}
         </main>
       </div>
     </div>

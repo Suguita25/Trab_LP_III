@@ -1,0 +1,253 @@
+.mapa-gamificado {
+  width: min(1200px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.mapa-gamificado__header h1 {
+  margin: 0 0 8px;
+  color: var(--cor-detalhes-claro);
+  font-size: 2rem;
+}
+
+.mapa-gamificado__header p {
+  margin: 0;
+  color: var(--cor-detalhes);
+  line-height: 1.5;
+}
+
+.mapa-gamificado__painel,
+.mapa-gamificado__lista {
+  background: rgba(24, 67, 52, 0.9);
+  border: 2px solid var(--cor-detalhes);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: 0 10px 30px var(--sombra-box);
+}
+
+.mapa-gamificado__campo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 260px;
+  margin-bottom: 16px;
+}
+
+.mapa-gamificado__campo label {
+  color: var(--cor-detalhes-claro);
+  font-weight: 700;
+}
+
+.mapa-gamificado__campo input,
+.mapa-gamificado__acoes input[type="file"] {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1.5px solid var(--cor-detalhes);
+  border-radius: var(--radius-sm);
+  background: var(--cor-back-escuro);
+  color: var(--cor-detalhes-claro);
+  outline: none;
+  transition: 0.2s ease;
+}
+
+.mapa-gamificado__campo input::placeholder {
+  color: var(--cor-detalhes);
+}
+
+.mapa-gamificado__campo input:focus,
+.mapa-gamificado__acoes input[type="file"]:focus {
+  border-color: var(--cor-detalhes-claro);
+  box-shadow: 0 0 0 3px var(--sombra-focus);
+}
+
+.mapa-gamificado__botao {
+  width: auto;
+  padding: 14px 18px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--cor-detalhes);
+  color: var(--cor-back-escuro);
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.mapa-gamificado__botao:hover {
+  background: var(--cor-detalhes-claro);
+  transform: translateY(-1px);
+}
+
+.mapa-gamificado__botao:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.mapa-gamificado__status {
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 225, 146, 0.3);
+  background: rgba(255, 225, 146, 0.06);
+  color: var(--cor-detalhes-claro);
+}
+
+.mapa-gamificado__mensagem {
+  margin-top: 16px;
+  font-weight: 700;
+}
+
+.mapa-gamificado__mensagem--sucesso {
+  color: var(--cor-sucesso);
+}
+
+.mapa-gamificado__mensagem--erro {
+  color: var(--cor-erro);
+}
+
+.mapa-gamificado__secao-titulo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.mapa-gamificado__secao-titulo h2 {
+  margin: 0;
+  color: var(--cor-detalhes-claro);
+}
+
+.mapa-gamificado__secao-titulo span {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 225, 146, 0.1);
+  color: var(--cor-detalhes-claro);
+  border: 1px solid rgba(255, 225, 146, 0.2);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.mapa-gamificado__vazio {
+  color: var(--cor-detalhes-claro);
+}
+
+.mapa-gamificado__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.mapa-gamificado__card {
+  border: 1px solid rgba(255, 225, 146, 0.3);
+  border-radius: 14px;
+  background: rgba(1, 43, 27, 0.45);
+  padding: 18px;
+}
+
+.mapa-gamificado__card-topo {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.mapa-gamificado__card-topo h3 {
+  margin: 0 0 8px;
+  color: var(--cor-detalhes-claro);
+}
+
+.mapa-gamificado__card-topo p {
+  margin: 0;
+  color: var(--cor-texto);
+  line-height: 1.5;
+}
+
+.mapa-gamificado__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  background: rgba(255, 155, 155, 0.12);
+  color: var(--cor-erro);
+}
+
+.mapa-gamificado__badge--ativo {
+  background: rgba(216, 243, 176, 0.12);
+  color: var(--cor-sucesso);
+}
+
+.mapa-gamificado__info {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.mapa-gamificado__info span {
+  color: var(--cor-detalhes-claro);
+  line-height: 1.4;
+}
+
+.mapa-gamificado__acoes {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@media (max-width: 900px) {
+  .mapa-gamificado__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .mapa-gamificado {
+    gap: 20px;
+  }
+
+  .mapa-gamificado__painel,
+  .mapa-gamificado__lista {
+    padding: 20px;
+    border-radius: 20px;
+  }
+
+  .mapa-gamificado__header h1 {
+    font-size: 1.6rem;
+  }
+
+  .mapa-gamificado__card-topo {
+    flex-direction: column;
+  }
+}
+
+.mapa-gamificado__mapa-wrapper {
+  width: 100%;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 225, 146, 0.24);
+}
+
+.mapa-gamificado__mapa {
+  width: 100%;
+  height: 420px;
+}
+
+.mapa-gamificado__badge--desbloqueado {
+  background: rgba(74, 222, 128, 0.18);
+  color: #86efac;
+  border: 1px solid rgba(74, 222, 128, 0.4);
+}
+
+.mapa-gamificado__card--desbloqueado {
+  border: 2px solid #4ade80;
+  box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.12);
+  background: linear-gradient(
+    180deg,
+    rgba(24, 67, 52, 0.98),
+    rgba(9, 59, 33, 0.98)
+  );
+}
