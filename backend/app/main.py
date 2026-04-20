@@ -3,22 +3,45 @@ from datetime import datetime, timezone
 from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy import inspect, text
 from sqlalchemy.orm import Session
+from fastapi.middleware.cors import CORSMiddleware
 
+from .services.gamification_service import usuario_esta_no_raio
 from .database import Base, SessionLocal, engine
-from .models import FotoPostada, Usuario
+from .models import (
+    Badge, 
+    DesbloqueioPonto, 
+    FotoPostada, 
+    TuristicPoint, Usuario)
 from .schemas import (
+    DesbloqueioPontoCreate,
+    DesbloqueioPontoResponse,
     FotoPostadaCreate,
     FotoPostadaResponse,
+    TuristicPointResponse,
     UsuarioCreate,
     UsuarioListResponse,
     UsuarioLogin,
     UsuarioResponse,
     UsuarioUpdate,
     UsuarioVerificacaoUpdate,
+    UsuarioDesbloqueiosResponse,
 )
 from .services.face_matching import FaceMatchError, verificar_match_facial
 
 app = FastAPI(title="Backend - Projeto Lab Prog III")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost",
+        "http://127.0.0.1",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 ORIGENS_VALIDAS_IMAGEM = {"camera", "galeria"}
 TAMANHO_MAXIMO_FOTO_BASE64 = 7_000_000
@@ -59,6 +82,11 @@ def garantir_colunas_verificacao_usuario():
         comandos.append(
             "ALTER TABLE usuarios ADD COLUMN verificacao_data_envio "
             "TIMESTAMP WITH TIME ZONE"
+        )
+
+    if "pontos_totais" not in colunas_existentes:
+        comandos.append(
+            "ALTER TABLE usuarios ADD COLUMN pontos_totais INTEGER NOT NULL DEFAULT 0"
         )
 
     with engine.begin() as conexao:
@@ -136,6 +164,23 @@ def buscar_usuario_ou_404(db: Session, usuario_id: int):
         raise HTTPException(status_code=404, detail="Usuario nao encontrado")
 
     return usuario
+
+def buscar_ponto_ou_404(db: Session, ponto_id: int):
+    ponto = db.query(TuristicPoint).filter(TuristicPoint.id == ponto_id).first()
+
+    if not ponto:
+        raise HTTPException(status_code=404, detail="Ponto turistico nao encontrado")
+
+    return ponto
+
+
+def buscar_melhor_badge(db: Session, pontos_totais: int):
+    return (
+        db.query(Badge)
+        .filter(Badge.ativo == True, Badge.pontos_minimos <= pontos_totais)
+        .order_by(Badge.pontos_minimos.desc())
+        .first()
+    )
 
 
 @app.get("/healthcheck")
@@ -328,6 +373,117 @@ def postar_foto_usuario(
 
     return nova_foto
 
+
+@app.get("/locations", response_model=list[TuristicPointResponse])
+def listar_pontos_turisticos(db: Session = Depends(get_db)):
+    return (
+        db.query(TuristicPoint)
+        .order_by(TuristicPoint.nome.asc())
+        .all()
+    )
+
+
+@app.post(
+    "/usuarios/{usuario_id}/desbloqueios/{ponto_id}",
+    response_model=DesbloqueioPontoResponse,
+)
+def desbloquear_ponto_turistico(
+    usuario_id: int,
+    ponto_id: int,
+    dados: DesbloqueioPontoCreate,
+    db: Session = Depends(get_db),
+):
+    usuario = buscar_usuario_ou_404(db, usuario_id)
+    ponto = buscar_ponto_ou_404(db, ponto_id)
+
+    validar_dados_imagem(
+        dados.foto,
+        dados.origem_foto,
+        "Envie uma foto do local usando a camera ou a galeria",
+    )
+
+    desbloqueio_existente = (
+        db.query(DesbloqueioPonto)
+        .filter(
+            DesbloqueioPonto.usuario_id == usuario_id,
+            DesbloqueioPonto.ponto_id == ponto_id,
+        )
+        .first()
+    )
+
+    if desbloqueio_existente:
+        raise HTTPException(
+            status_code=400,
+            detail="Esse ponto turistico ja foi desbloqueado por este usuario",
+        )
+
+    esta_no_raio, distancia = usuario_esta_no_raio(
+        latitude_usuario=dados.latitude_usuario,
+        longitude_usuario=dados.longitude_usuario,
+        latitude_ponto=ponto.latitude,
+        longitude_ponto=ponto.longitude,
+        raio_desbloqueio=ponto.raio_desbloqueio,
+    )
+
+    if not esta_no_raio:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"Usuario fora do raio permitido para desbloqueio. "
+                f"Distancia atual: {distancia:.2f} metros"
+            ),
+        )
+
+    usuario.pontos_totais += ponto.pontos_valor
+
+    badge = buscar_melhor_badge(db, usuario.pontos_totais)
+
+    novo_desbloqueio = DesbloqueioPonto(
+        usuario_id=usuario_id,
+        ponto_id=ponto_id,
+        foto=dados.foto,
+        latitude_usuario=dados.latitude_usuario,
+        longitude_usuario=dados.longitude_usuario,
+        distancia=distancia,
+        pontos_ganhos=ponto.pontos_valor,
+        data_desbloqueio=datetime.now(timezone.utc),
+        badge_desbloqueada_id=badge.id if badge else None,
+    )
+
+    db.add(novo_desbloqueio)
+    db.commit()
+    db.refresh(novo_desbloqueio)
+    db.refresh(usuario)
+
+    return DesbloqueioPontoResponse(
+        mensagem="Ponto turistico desbloqueado com sucesso",
+        ponto_id=ponto.id,
+        ponto_nome=ponto.nome,
+        distancia=distancia,
+        pontos_ganhos=ponto.pontos_valor,
+        pontos_totais_usuario=usuario.pontos_totais,
+        badge=badge.nome if badge else None,
+    )
+
+@app.get(
+    "/usuarios/{usuario_id}/desbloqueios",
+    response_model=UsuarioDesbloqueiosResponse,
+)
+def listar_desbloqueios_usuario(usuario_id: int, db: Session = Depends(get_db)):
+    buscar_usuario_ou_404(db, usuario_id)
+
+    desbloqueios = (
+        db.query(DesbloqueioPonto)
+        .filter(DesbloqueioPonto.usuario_id == usuario_id)
+        .all()
+    )
+
+    pontos_ids = [desbloqueio.ponto_id for desbloqueio in desbloqueios]
+
+    return UsuarioDesbloqueiosResponse(
+        usuario_id=usuario_id,
+        pontos_desbloqueados=pontos_ids,
+    )
 
 @app.delete("/usuarios/{usuario_id}")
 def deletar_usuario(usuario_id: int, db: Session = Depends(get_db)):

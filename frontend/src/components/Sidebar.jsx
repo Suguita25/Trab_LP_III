@@ -7,6 +7,7 @@ function Sidebar({
   onIrCadastro,
   onIrPerfil,
   onIrHealthcheck,
+  onIrMapaGamificado,
   onSair,
 }) {
   function handleAcao(acao) {
@@ -53,6 +54,14 @@ function Sidebar({
           onClick={() => handleAcao(onIrHealthcheck)}
         >
           Health Check
+        </button>
+
+        <button
+          type="button"
+          className={paginaAtual === 'mapa-gamificado' ? 'sidebar-btn ativo' : 'sidebar-btn'}
+          onClick={() => handleAcao(onIrMapaGamificado)}
+        >
+          Mapa Gamificado
         </button>
 
         {usuarioLogado && (
