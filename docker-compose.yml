@@ -11,7 +11,7 @@ services:
       DB_PORT: 5432
       DB_NAME: labdb
       DB_USER: postgres
-      DB_PASSWORD: shawnie
+      DB_PASSWORD: postgres
 
   db:
     image: postgres:16
@@ -19,7 +19,7 @@ services:
     environment:
       POSTGRES_DB: labdb
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: shawnie
+      POSTGRES_PASSWORD: postgres
     ports:
       - "5433:5432"
     volumes:
