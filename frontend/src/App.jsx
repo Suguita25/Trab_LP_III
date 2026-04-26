@@ -7,6 +7,7 @@ import Cadastro from './pages/Cadastro'
 import HealthCheck from './pages/HealthCheck'
 import Login from './pages/Login'
 import MapaGamificado from './pages/MapaGamificado'
+import MatchesAfinidade from './pages/MatchesAfinidade'
 import Perfil from './pages/Perfil'
 import {
   atualizarUsuario,
@@ -26,6 +27,7 @@ function getTituloPagina(pagina) {
   if (pagina === 'perfil') return 'Perfil do usuario'
   if (pagina === 'healthcheck') return 'Health Check'
   if (pagina === 'mapa-gamificado') return 'Mapa Gamificado'
+  if (pagina === 'matches-afinidade') return 'Matches por Afinidade'
   return 'Sistema'
 }
 
@@ -131,6 +133,14 @@ function App() {
   function irParaMapaGamificado() {
     limparFeedback()
     setPagina('mapa-gamificado')
+  }
+
+  function irParaMatchesAfinidade() {
+    limparFeedback()
+
+    if (usuarioLogado) {
+      setPagina('matches-afinidade')
+    }
   }
 
   function sair() {
@@ -312,6 +322,7 @@ function App() {
         onIrPerfil={irParaPerfil}
         onIrHealthcheck={irParaHealthcheck}
         onIrMapaGamificado={irParaMapaGamificado}
+        onIrMatchesAfinidade={irParaMatchesAfinidade}
         onSair={sair}
       />
 
@@ -369,11 +380,19 @@ function App() {
               {erro && <p className="erro">{erro}</p>}
             </div>
           ) : (
-            <MapaGamificado
-              usuarioLogado={usuarioLogado}
-              resumoGamificacao={resumoGamificacao}
-              onAtualizarResumoGamificacao={atualizarResumoGamificacao}
-            />
+            <>
+              {pagina === 'mapa-gamificado' && (
+                <MapaGamificado
+                  usuarioLogado={usuarioLogado}
+                  resumoGamificacao={resumoGamificacao}
+                  onAtualizarResumoGamificacao={atualizarResumoGamificacao}
+                />
+              )}
+
+              {pagina === 'matches-afinidade' && (
+                <MatchesAfinidade usuarioLogado={usuarioLogado} />
+              )}
+            </>
           )}
         </main>
       </div>

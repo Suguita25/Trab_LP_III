@@ -114,3 +114,34 @@ class DesbloqueioPontoCreate(BaseModel):
 class UsuarioDesbloqueiosResponse(BaseModel):
     usuario_id: int
     pontos_desbloqueados: list[int]
+
+
+class MatchRecommendationResponse(BaseModel):
+    usuario_destino_id: int
+    usuario_destino_nome: str
+    quantidade_locais_em_comum: int
+    score_afinidade: float
+    status: str
+    locais_em_comum: list[str]
+
+    class Config:
+        from_attributes = True
+
+
+class MatchDetailResponse(MatchRecommendationResponse):
+    usuario_origem_id: int
+    total_locais_usuario_origem: int
+    total_locais_usuario_destino: int
+
+
+class MatchInteractionResponse(MatchRecommendationResponse):
+    id: int | None = None
+    atualizado_em: datetime | None = None
+
+    class Config:
+        from_attributes = True
+
+
+class MatchActionResponse(BaseModel):
+    mensagem: str
+    match: MatchInteractionResponse

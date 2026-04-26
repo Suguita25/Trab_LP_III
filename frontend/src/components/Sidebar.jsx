@@ -8,6 +8,7 @@ function Sidebar({
   onIrPerfil,
   onIrHealthcheck,
   onIrMapaGamificado,
+  onIrMatchesAfinidade,
   onSair,
 }) {
   function handleAcao(acao) {
@@ -66,6 +67,14 @@ function Sidebar({
 
         {usuarioLogado && (
           <>
+            <button
+              type="button"
+              className={paginaAtual === 'matches-afinidade' ? 'sidebar-btn ativo' : 'sidebar-btn'}
+              onClick={() => handleAcao(onIrMatchesAfinidade)}
+            >
+              Matches por Afinidade
+            </button>
+
             <button
               type="button"
               className={paginaAtual === 'perfil' ? 'sidebar-btn ativo' : 'sidebar-btn'}

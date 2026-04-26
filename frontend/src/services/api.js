@@ -101,6 +101,30 @@ export function excluirUsuario(id) {
   })
 }
 
+export function listarMatchesUsuario(id) {
+  return request(`/usuarios/${id}/matches`)
+}
+
+export function buscarDetalhesMatchUsuario(id, outroUsuarioId) {
+  return request(`/usuarios/${id}/matches/${outroUsuarioId}`)
+}
+
+export function curtirMatchUsuario(id, outroUsuarioId) {
+  return request(`/usuarios/${id}/matches/${outroUsuarioId}/curtir`, {
+    method: 'POST',
+  })
+}
+
+export function ignorarMatchUsuario(id, outroUsuarioId) {
+  return request(`/usuarios/${id}/matches/${outroUsuarioId}/ignorar`, {
+    method: 'POST',
+  })
+}
+
+export function listarInteracoesMatchUsuario(id) {
+  return request(`/usuarios/${id}/matches/interacoes`)
+}
+
 export function verificarHealthcheck() {
   return request('/healthcheck', {
     method: 'GET',

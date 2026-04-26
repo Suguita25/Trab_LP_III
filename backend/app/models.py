@@ -63,6 +63,36 @@ class DesbloqueioPonto(Base):
     )
 
 
+class Match(Base):
+    __tablename__ = "matches"
+
+    id = Column(Integer, primary_key=True, index=True)
+    usuario_origem_id = Column(
+        Integer,
+        ForeignKey("usuarios.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    usuario_destino_id = Column(
+        Integer,
+        ForeignKey("usuarios.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    score_afinidade = Column(Float, nullable=False, default=0)
+    status = Column(String, nullable=False, default="sugerido")
+    criado_em = Column(DateTime(timezone=True), nullable=False)
+    atualizado_em = Column(DateTime(timezone=True), nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint(
+            "usuario_origem_id",
+            "usuario_destino_id",
+            name="uq_match_origem_destino",
+        ),
+    )
+
+
 class Badge(Base):
     __tablename__ = "badges"
 

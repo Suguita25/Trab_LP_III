@@ -11,12 +11,17 @@ from .models import (
     Badge, 
     DesbloqueioPonto, 
     FotoPostada, 
+    Match,
     TuristicPoint, Usuario)
 from .schemas import (
     DesbloqueioPontoCreate,
     DesbloqueioPontoResponse,
     FotoPostadaCreate,
     FotoPostadaResponse,
+    MatchActionResponse,
+    MatchDetailResponse,
+    MatchInteractionResponse,
+    MatchRecommendationResponse,
     TuristicPointResponse,
     UsuarioCreate,
     UsuarioListResponse,
@@ -27,6 +32,14 @@ from .schemas import (
     UsuarioDesbloqueiosResponse,
 )
 from .services.face_matching import FaceMatchError, verificar_match_facial
+from .services.match_service import (
+    MATCH_STATUS_CURTIDO,
+    MATCH_STATUS_IGNORADO,
+    listar_interacoes_match,
+    listar_recomendacoes_match,
+    obter_detalhes_match,
+    registrar_interacao_match,
+)
 
 app = FastAPI(title="Backend - Projeto Lab Prog III")
 
@@ -164,6 +177,7 @@ def buscar_usuario_ou_404(db: Session, usuario_id: int):
         raise HTTPException(status_code=404, detail="Usuario nao encontrado")
 
     return usuario
+
 
 def buscar_ponto_ou_404(db: Session, ponto_id: int):
     ponto = db.query(TuristicPoint).filter(TuristicPoint.id == ponto_id).first()
@@ -484,6 +498,122 @@ def listar_desbloqueios_usuario(usuario_id: int, db: Session = Depends(get_db)):
         usuario_id=usuario_id,
         pontos_desbloqueados=pontos_ids,
     )
+
+
+@app.get(
+    "/usuarios/{usuario_id}/matches",
+    response_model=list[MatchRecommendationResponse],
+)
+def listar_matches_usuario(usuario_id: int, db: Session = Depends(get_db)):
+    buscar_usuario_ou_404(db, usuario_id)
+
+    return listar_recomendacoes_match(db, usuario_id)
+
+
+@app.get(
+    "/usuarios/{usuario_id}/matches/interacoes",
+    response_model=list[MatchInteractionResponse],
+)
+def listar_interacoes_matches_usuario(
+    usuario_id: int,
+    db: Session = Depends(get_db),
+):
+    buscar_usuario_ou_404(db, usuario_id)
+
+    return listar_interacoes_match(db, usuario_id)
+
+
+@app.get(
+    "/usuarios/{usuario_id}/matches/{outro_usuario_id}",
+    response_model=MatchDetailResponse,
+)
+def detalhar_match_usuario(
+    usuario_id: int,
+    outro_usuario_id: int,
+    db: Session = Depends(get_db),
+):
+    buscar_usuario_ou_404(db, usuario_id)
+    buscar_usuario_ou_404(db, outro_usuario_id)
+
+    if usuario_id == outro_usuario_id:
+        raise HTTPException(
+            status_code=400,
+            detail="Nao e possivel comparar um usuario com ele mesmo",
+        )
+
+    try:
+        return obter_detalhes_match(db, usuario_id, outro_usuario_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+def registrar_acao_match(
+    usuario_id: int,
+    outro_usuario_id: int,
+    status: str,
+    mensagem: str,
+    db: Session,
+):
+    buscar_usuario_ou_404(db, usuario_id)
+    buscar_usuario_ou_404(db, outro_usuario_id)
+
+    if usuario_id == outro_usuario_id:
+        raise HTTPException(
+            status_code=400,
+            detail="Nao e possivel interagir com um match do proprio usuario",
+        )
+
+    try:
+        match = registrar_interacao_match(
+            db,
+            usuario_id,
+            outro_usuario_id,
+            status,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    return MatchActionResponse(
+        mensagem=mensagem,
+        match=match,
+    )
+
+
+@app.post(
+    "/usuarios/{usuario_id}/matches/{outro_usuario_id}/curtir",
+    response_model=MatchActionResponse,
+)
+def curtir_match_usuario(
+    usuario_id: int,
+    outro_usuario_id: int,
+    db: Session = Depends(get_db),
+):
+    return registrar_acao_match(
+        usuario_id=usuario_id,
+        outro_usuario_id=outro_usuario_id,
+        status=MATCH_STATUS_CURTIDO,
+        mensagem="Match curtido com sucesso",
+        db=db,
+    )
+
+
+@app.post(
+    "/usuarios/{usuario_id}/matches/{outro_usuario_id}/ignorar",
+    response_model=MatchActionResponse,
+)
+def ignorar_match_usuario(
+    usuario_id: int,
+    outro_usuario_id: int,
+    db: Session = Depends(get_db),
+):
+    return registrar_acao_match(
+        usuario_id=usuario_id,
+        outro_usuario_id=outro_usuario_id,
+        status=MATCH_STATUS_IGNORADO,
+        mensagem="Match ignorado com sucesso",
+        db=db,
+    )
+
 
 @app.delete("/usuarios/{usuario_id}")
 def deletar_usuario(usuario_id: int, db: Session = Depends(get_db)):
