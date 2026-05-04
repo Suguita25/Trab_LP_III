@@ -1,0 +1,56 @@
+{
+  "expo": {
+    "name": "Exerion",
+    "slug": "exerion-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#011A10"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.labprogiii.exerionmobile",
+      "infoPlist": {
+        "NSCameraUsageDescription": "O app usa a camera para registrar a visita ao ponto turistico.",
+        "NSLocationWhenInUseUsageDescription": "O app usa sua localizacao para validar proximidade aos pontos turisticos.",
+        "NSPhotoLibraryUsageDescription": "O app usa sua galeria para anexar uma foto da visita."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#011A10"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.labprogiii.exerionmobile",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "CAMERA"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "O app usa sua localizacao para validar proximidade aos pontos turisticos."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "O app usa sua galeria para anexar uma foto da visita.",
+          "cameraPermission": "O app usa a camera para registrar a visita ao ponto turistico."
+        }
+      ]
+    ],
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}

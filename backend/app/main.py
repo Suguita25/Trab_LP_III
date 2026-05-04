@@ -30,6 +30,8 @@ from .schemas import (
     UsuarioUpdate,
     UsuarioVerificacaoUpdate,
     UsuarioDesbloqueiosResponse,
+    ValidacaoProximidadeCreate,
+    ValidacaoProximidadeResponse,
 )
 from .services.face_matching import FaceMatchError, verificar_match_facial
 from .services.match_service import (
@@ -394,6 +396,36 @@ def listar_pontos_turisticos(db: Session = Depends(get_db)):
         db.query(TuristicPoint)
         .order_by(TuristicPoint.nome.asc())
         .all()
+    )
+
+
+@app.post(
+    "/usuarios/{usuario_id}/desbloqueios/{ponto_id}/validar-proximidade",
+    response_model=ValidacaoProximidadeResponse,
+)
+def validar_proximidade_ponto_turistico(
+    usuario_id: int,
+    ponto_id: int,
+    dados: ValidacaoProximidadeCreate,
+    db: Session = Depends(get_db),
+):
+    buscar_usuario_ou_404(db, usuario_id)
+    ponto = buscar_ponto_ou_404(db, ponto_id)
+
+    esta_no_raio, distancia = usuario_esta_no_raio(
+        latitude_usuario=dados.latitude_usuario,
+        longitude_usuario=dados.longitude_usuario,
+        latitude_ponto=ponto.latitude,
+        longitude_ponto=ponto.longitude,
+        raio_desbloqueio=ponto.raio_desbloqueio,
+    )
+
+    return ValidacaoProximidadeResponse(
+        ponto_id=ponto.id,
+        ponto_nome=ponto.nome,
+        dentro_do_raio=esta_no_raio,
+        distancia=distancia,
+        raio_desbloqueio=ponto.raio_desbloqueio,
     )
 
 

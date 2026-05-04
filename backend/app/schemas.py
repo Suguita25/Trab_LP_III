@@ -105,11 +105,26 @@ class DesbloqueioPontoResponse(BaseModel):
     pontos_totais_usuario: int
     badge: str | None = None
 
+
 class DesbloqueioPontoCreate(BaseModel):
     foto: str
     origem_foto: str
     latitude_usuario: float
     longitude_usuario: float
+
+
+class ValidacaoProximidadeCreate(BaseModel):
+    latitude_usuario: float
+    longitude_usuario: float
+
+
+class ValidacaoProximidadeResponse(BaseModel):
+    ponto_id: int
+    ponto_nome: str
+    dentro_do_raio: bool
+    distancia: float
+    raio_desbloqueio: float
+
 
 class UsuarioDesbloqueiosResponse(BaseModel):
     usuario_id: int
