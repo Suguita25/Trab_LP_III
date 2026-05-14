@@ -5,8 +5,11 @@
   "scripts": {
     "postinstall": "node scripts/patchExpoLanIp.cjs",
     "start": "expo start --lan",
+    "start:tunnel": "expo start --tunnel",
     "android": "expo start --lan --android",
+    "android:tunnel": "expo start --tunnel --android",
     "ios": "expo start --lan --ios",
+    "ios:tunnel": "expo start --tunnel --ios",
     "web": "expo start --web"
   },
   "dependencies": {

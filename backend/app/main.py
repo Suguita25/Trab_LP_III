@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+import os
 
 from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy import inspect, text
@@ -45,14 +46,26 @@ from .services.match_service import (
 
 app = FastAPI(title="Backend - Projeto Lab Prog III")
 
+origens_padrao = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost",
+    "http://127.0.0.1",
+    "http://192.168.91.176:8041",
+]
+origens_configuradas = os.getenv(
+    "CORS_ALLOW_ORIGINS",
+    ",".join(origens_padrao),
+)
+allow_origins = [
+    origem.strip()
+    for origem in origens_configuradas.split(",")
+    if origem.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost",
-        "http://127.0.0.1",
-    ],
+    allow_origins=allow_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

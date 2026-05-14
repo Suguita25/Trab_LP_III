@@ -6,7 +6,6 @@ function Sidebar({
   onIrLogin,
   onIrCadastro,
   onIrPerfil,
-  onIrHealthcheck,
   onIrMapaGamificado,
   onIrMatchesAfinidade,
   onSair,
@@ -47,14 +46,6 @@ function Sidebar({
           onClick={() => handleAcao(onIrCadastro)}
         >
           Cadastro
-        </button>
-
-        <button
-          type="button"
-          className={paginaAtual === 'healthcheck' ? 'sidebar-btn ativo' : 'sidebar-btn'}
-          onClick={() => handleAcao(onIrHealthcheck)}
-        >
-          Health Check
         </button>
 
         <button

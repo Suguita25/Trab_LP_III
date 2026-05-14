@@ -1,7 +1,7 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || ''
+import { buildApiUrl } from './apiConfig'
 
 async function request(path, options = {}) {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(buildApiUrl(path), {
     headers: {
       'Content-Type': 'application/json',
       ...(options.headers || {}),
@@ -123,10 +123,4 @@ export function ignorarMatchUsuario(id, outroUsuarioId) {
 
 export function listarInteracoesMatchUsuario(id) {
   return request(`/usuarios/${id}/matches/interacoes`)
-}
-
-export function verificarHealthcheck() {
-  return request('/healthcheck', {
-    method: 'GET',
-  })
 }

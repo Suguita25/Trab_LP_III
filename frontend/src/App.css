@@ -412,21 +412,6 @@
 
 /* HEALTH CHECK */
 
-.health-box {
-  background: var(--cor-back-escuro);
-  border: 1px solid var(--cor-detalhes);
-  border-radius: 14px;
-  padding: 22px;
-  margin-bottom: 20px;
-  text-align: center;
-}
-
-.health-box p {
-  margin: 0;
-  color: var(--cor-detalhes-claro);
-  font-size: 1.05rem;
-}
-
 /* SIDEBAR SLIDE */
 
 .sidebar-overlay {

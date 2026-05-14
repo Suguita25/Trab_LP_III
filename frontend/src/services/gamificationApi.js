@@ -1,8 +1,8 @@
-const API_BASE_URL = "http://localhost:8000";
+import { buildApiUrl } from "./apiConfig";
 
 
 export async function getLocations() {
-  const response = await fetch(`${API_BASE_URL}/locations`);
+  const response = await fetch(buildApiUrl("/locations"));
 
   if (!response.ok) {
     throw new Error("Erro ao buscar pontos turísticos");
@@ -13,7 +13,7 @@ export async function getLocations() {
 
 export async function unlockLocation(usuarioId, pontoId, payload) {
   const response = await fetch(
-    `${API_BASE_URL}/usuarios/${usuarioId}/desbloqueios/${pontoId}`,
+    buildApiUrl(`/usuarios/${usuarioId}/desbloqueios/${pontoId}`),
     {
       method: "POST",
       headers: {
@@ -33,9 +33,7 @@ export async function unlockLocation(usuarioId, pontoId, payload) {
 }
 
 export async function getUnlockedPoints(usuarioId) {
-  const response = await fetch(
-    `${API_BASE_URL}/usuarios/${usuarioId}/desbloqueios`
-  );
+  const response = await fetch(buildApiUrl(`/usuarios/${usuarioId}/desbloqueios`));
 
   const data = await response.json();
 

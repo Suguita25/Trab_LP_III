@@ -4,7 +4,6 @@ import './App.css'
 import Header from './components/Header'
 import Sidebar from './components/Sidebar'
 import Cadastro from './pages/Cadastro'
-import HealthCheck from './pages/HealthCheck'
 import Login from './pages/Login'
 import MapaGamificado from './pages/MapaGamificado'
 import MatchesAfinidade from './pages/MatchesAfinidade'
@@ -25,7 +24,6 @@ function getTituloPagina(pagina) {
   if (pagina === 'login') return 'Login'
   if (pagina === 'cadastro') return 'Cadastro'
   if (pagina === 'perfil') return 'Perfil do usuario'
-  if (pagina === 'healthcheck') return 'Health Check'
   if (pagina === 'mapa-gamificado') return 'Mapa Gamificado'
   if (pagina === 'matches-afinidade') return 'Matches por Afinidade'
   return 'Sistema'
@@ -123,11 +121,6 @@ function App() {
     if (usuarioLogado) {
       setPagina('perfil')
     }
-  }
-
-  function irParaHealthcheck() {
-    limparFeedback()
-    setPagina('healthcheck')
   }
 
   function irParaMapaGamificado() {
@@ -307,8 +300,7 @@ function App() {
   const paginaUsaBoxPequeno =
     pagina === 'login' ||
     pagina === 'cadastro' ||
-    pagina === 'perfil' ||
-    pagina === 'healthcheck'
+    pagina === 'perfil'
 
   return (
     <div className="layout">
@@ -320,7 +312,6 @@ function App() {
         onIrLogin={irParaLogin}
         onIrCadastro={irParaCadastro}
         onIrPerfil={irParaPerfil}
-        onIrHealthcheck={irParaHealthcheck}
         onIrMapaGamificado={irParaMapaGamificado}
         onIrMatchesAfinidade={irParaMatchesAfinidade}
         onSair={sair}
@@ -373,8 +364,6 @@ function App() {
                   carregando={carregando}
                 />
               )}
-
-              {pagina === 'healthcheck' && <HealthCheck />}
 
               {mensagem && <p className="sucesso">{mensagem}</p>}
               {erro && <p className="erro">{erro}</p>}

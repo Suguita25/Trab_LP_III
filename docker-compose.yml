@@ -2,40 +2,64 @@ services:
   backend:
     build: ./backend
     container_name: lab_backend
+    restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "8042:8000"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
-      DB_HOST: db
-      DB_PORT: 5432
-      DB_NAME: labdb
-      DB_USER: postgres
-      DB_PASSWORD: postgres
+      DB_HOST: ${DB_HOST:-db}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-labdb}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      CORS_ALLOW_ORIGINS: ${CORS_ALLOW_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173,http://localhost,http://127.0.0.1,http://192.168.91.176:8041}
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthcheck')",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   db:
     image: postgres:16
     container_name: lab_db
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: labdb
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5433:5432"
+      POSTGRES_DB: ${DB_NAME:-labdb}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
     volumes:
       - pgdata:/var/lib/postgresql/data
-
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-labdb}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   frontend:
     build: ./frontend
     container_name: lab_frontend
+    restart: unless-stopped
     ports:
-      - "5173:5173"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+      - "8041:5173"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    environment:
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://192.168.91.176:8042}
 
 volumes:
   pgdata:
