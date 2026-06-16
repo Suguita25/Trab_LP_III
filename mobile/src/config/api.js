@@ -61,9 +61,11 @@ function getAutomaticApiBaseUrl() {
   return `http://${host}:8000`;
 }
 
-const DEFAULT_API_BASE_URL = AUTO_DETECT_API_BASE_URL
-  ? getAutomaticApiBaseUrl() || FALLBACK_API_BASE_URL
-  : ENV_API_BASE_URL || FALLBACK_API_BASE_URL;
+const DEFAULT_API_BASE_URL =
+  ENV_API_BASE_URL ||
+  (AUTO_DETECT_API_BASE_URL
+    ? getAutomaticApiBaseUrl() || FALLBACK_API_BASE_URL
+    : FALLBACK_API_BASE_URL);
 
 export function normalizeApiBaseUrl(value) {
   if (!value || !value.trim()) {

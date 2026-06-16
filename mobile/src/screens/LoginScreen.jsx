@@ -18,7 +18,13 @@ import { buildPhotoDataUri } from "../utils/gamification";
 import { selecionarImagemComPermissao } from "../utils/imagePicker";
 
 export default function LoginScreen() {
-  const { apiBaseUrl, autenticando, cadastrando, cadastrar, login } =
+  const {
+    apiBaseUrl,
+    autenticando,
+    cadastrando,
+    cadastrar,
+    login,
+  } =
     useAppContext();
   const [modo, setModo] = useState("login");
   const [nome, setNome] = useState("");

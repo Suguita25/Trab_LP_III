@@ -4,10 +4,10 @@
   "main": "index.js",
   "scripts": {
     "postinstall": "node scripts/patchExpoLanIp.cjs",
-    "start": "expo start --lan",
-    "android": "expo start --lan --android",
-    "ios": "expo start --lan --ios",
-    "web": "expo start --web"
+    "start": "node scripts/startExpoWithLanApi.cjs",
+    "android": "node scripts/startExpoWithLanApi.cjs --android",
+    "ios": "node scripts/startExpoWithLanApi.cjs --ios",
+    "web": "node scripts/startExpoWithLanApi.cjs --web"
   },
   "dependencies": {
     "@react-navigation/bottom-tabs": "^7.15.11",

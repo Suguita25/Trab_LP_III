@@ -6,7 +6,6 @@ function Sidebar({
   onIrLogin,
   onIrCadastro,
   onIrPerfil,
-  onIrHealthcheck,
   onIrMapaGamificado,
   onIrMatchesAfinidade,
   onSair,
@@ -33,40 +32,36 @@ function Sidebar({
           </button>
         </div>
 
-        <button
-          type="button"
-          className={paginaAtual === 'login' ? 'sidebar-btn ativo' : 'sidebar-btn'}
-          onClick={() => handleAcao(onIrLogin)}
-        >
-          Login
-        </button>
+        {!usuarioLogado && (
+          <>
+            <button
+              type="button"
+              className={paginaAtual === 'login' ? 'sidebar-btn ativo' : 'sidebar-btn'}
+              onClick={() => handleAcao(onIrLogin)}
+            >
+              Login
+            </button>
 
-        <button
-          type="button"
-          className={paginaAtual === 'cadastro' ? 'sidebar-btn ativo' : 'sidebar-btn'}
-          onClick={() => handleAcao(onIrCadastro)}
-        >
-          Cadastro
-        </button>
-
-        <button
-          type="button"
-          className={paginaAtual === 'healthcheck' ? 'sidebar-btn ativo' : 'sidebar-btn'}
-          onClick={() => handleAcao(onIrHealthcheck)}
-        >
-          Health Check
-        </button>
-
-        <button
-          type="button"
-          className={paginaAtual === 'mapa-gamificado' ? 'sidebar-btn ativo' : 'sidebar-btn'}
-          onClick={() => handleAcao(onIrMapaGamificado)}
-        >
-          Mapa Gamificado
-        </button>
+            <button
+              type="button"
+              className={paginaAtual === 'cadastro' ? 'sidebar-btn ativo' : 'sidebar-btn'}
+              onClick={() => handleAcao(onIrCadastro)}
+            >
+              Cadastro
+            </button>
+          </>
+        )}
 
         {usuarioLogado && (
           <>
+            <button
+              type="button"
+              className={paginaAtual === 'mapa-gamificado' ? 'sidebar-btn ativo' : 'sidebar-btn'}
+              onClick={() => handleAcao(onIrMapaGamificado)}
+            >
+              Mapa Gamificado
+            </button>
+
             <button
               type="button"
               className={paginaAtual === 'matches-afinidade' ? 'sidebar-btn ativo' : 'sidebar-btn'}

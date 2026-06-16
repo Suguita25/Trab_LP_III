@@ -23,9 +23,10 @@ async function parseResponseBody(response) {
 
 export async function requestJson(baseUrl, path, options = {}) {
   let response;
+  const url = buildUrl(baseUrl, path);
 
   try {
-    response = await fetch(buildUrl(baseUrl, path), {
+    response = await fetch(url, {
       headers: {
         Accept: "application/json",
         ...(options.headers || {}),
@@ -34,7 +35,7 @@ export async function requestJson(baseUrl, path, options = {}) {
     });
   } catch {
     throw new Error(
-      "Nao foi possivel conectar ao servidor. Verifique sua rede e tente novamente."
+      `Nao foi possivel conectar ao servidor em ${url}. Verifique o IP, a porta e a rede Wi-Fi.`
     );
   }
 
