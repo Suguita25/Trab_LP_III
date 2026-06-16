@@ -12,7 +12,6 @@ import {
   atualizarUsuario,
   buscarUsuarioPorEmail,
   cadastrarUsuario,
-  enviarVerificacaoUsuario,
   excluirUsuario,
   listarFotosUsuario,
   loginUsuario,
@@ -230,28 +229,6 @@ function App() {
     }
   }
 
-  async function handleEnviarVerificacao({ fotoVerificacao, origemFoto }) {
-    if (!usuarioLogado) return
-
-    limparFeedback()
-    setCarregando(true)
-
-    try {
-      const usuarioAtualizado = await enviarVerificacaoUsuario(usuarioLogado.id, {
-        fotoVerificacao,
-        origemFoto,
-      })
-
-      setUsuarioLogado(usuarioAtualizado)
-      setMensagem('Nova foto de verificacao enviada para analise.')
-    } catch (err) {
-      setErro(err.message)
-      throw err
-    } finally {
-      setCarregando(false)
-    }
-  }
-
   async function handlePostarFoto({ foto, origemFoto }) {
     if (!usuarioLogado) return
 
@@ -357,10 +334,8 @@ function App() {
                   fotos={fotosUsuario}
                   resumoGamificacao={resumoGamificacao}
                   onSalvarEdicao={handleSalvarEdicao}
-                  onEnviarVerificacao={handleEnviarVerificacao}
                   onPostarFoto={handlePostarFoto}
                   onExcluirConta={handleExcluirConta}
-                  onSair={sair}
                   carregando={carregando}
                 />
               )}

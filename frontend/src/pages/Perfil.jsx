@@ -2,26 +2,6 @@ import { useState } from 'react'
 
 import VerificacaoIdentidade from '../components/VerificacaoIdentidade'
 
-function formatarStatusVerificacao(status) {
-  if (status === 'em_analise') return 'Em analise'
-  if (status === 'aprovado') return 'Aprovado'
-  if (status === 'rejeitado') return 'Rejeitado'
-  return 'Nao enviado'
-}
-
-function getClasseStatus(status) {
-  if (status === 'em_analise') return 'badge-status status-analise'
-  if (status === 'aprovado') return 'badge-status status-aprovado'
-  if (status === 'rejeitado') return 'badge-status status-rejeitado'
-  return 'badge-status status-neutro'
-}
-
-function formatarOrigemFoto(origem) {
-  if (origem === 'camera') return 'Camera do notebook'
-  if (origem === 'galeria') return 'Galeria'
-  return 'Nao informada'
-}
-
 function formatarData(data) {
   if (!data) return 'Nenhum registro'
 
@@ -41,27 +21,17 @@ function Perfil({
   fotos,
   resumoGamificacao,
   onSalvarEdicao,
-  onEnviarVerificacao,
   onPostarFoto,
   onExcluirConta,
-  onSair,
   carregando,
 }) {
   const [editandoDados, setEditandoDados] = useState(false)
-  const [editandoVerificacao, setEditandoVerificacao] = useState(false)
   const [postandoFoto, setPostandoFoto] = useState(false)
   const [nome, setNome] = useState(usuario?.nome || '')
   const [email, setEmail] = useState(usuario?.email || '')
   const [senha, setSenha] = useState('')
-  const [fotoVerificacao, setFotoVerificacao] = useState(
-    usuario?.foto_verificacao || ''
-  )
-  const [origemFotoVerificacao, setOrigemFotoVerificacao] = useState(
-    usuario?.verificacao_origem_foto || ''
-  )
   const [fotoPostagem, setFotoPostagem] = useState('')
   const [origemFotoPostagem, setOrigemFotoPostagem] = useState('')
-  const [erroVerificacaoLocal, setErroVerificacaoLocal] = useState('')
   const [erroPostagemLocal, setErroPostagemLocal] = useState('')
 
   const progresso = resumoGamificacao || {
@@ -82,30 +52,6 @@ function Perfil({
 
     setSenha('')
     setEditandoDados(false)
-  }
-
-  async function handleSubmitVerificacao(e) {
-    e.preventDefault()
-
-    if (!fotoVerificacao || !origemFotoVerificacao) {
-      setErroVerificacaoLocal(
-        'Selecione uma foto pela camera do notebook ou pela galeria.'
-      )
-      return
-    }
-
-    setErroVerificacaoLocal('')
-
-    try {
-      await onEnviarVerificacao({
-        fotoVerificacao,
-        origemFoto: origemFotoVerificacao,
-      })
-
-      setEditandoVerificacao(false)
-    } catch {
-      // O feedback global da tela ja exibe o detalhe da API.
-    }
   }
 
   async function handleSubmitPostagem(e) {
@@ -144,15 +90,6 @@ function Perfil({
     await onExcluirConta()
   }
 
-  function handleAtualizarFotoVerificacao({
-    foto: novaFoto,
-    origemFoto: novaOrigem,
-  }) {
-    setFotoVerificacao(novaFoto)
-    setOrigemFotoVerificacao(novaOrigem)
-    setErroVerificacaoLocal('')
-  }
-
   function handleAtualizarFotoPostagem({
     foto: novaFoto,
     origemFoto: novaOrigem,
@@ -167,13 +104,6 @@ function Perfil({
     setEmail(usuario.email)
     setSenha('')
     setEditandoDados(false)
-  }
-
-  function cancelarEdicaoVerificacao() {
-    setFotoVerificacao(usuario?.foto_verificacao || '')
-    setOrigemFotoVerificacao(usuario?.verificacao_origem_foto || '')
-    setErroVerificacaoLocal('')
-    setEditandoVerificacao(false)
   }
 
   function cancelarPostagem() {
@@ -225,41 +155,6 @@ function Perfil({
             onClick={cancelarEdicaoDados}
           >
             Cancelar edicao
-          </button>
-        </p>
-      </>
-    )
-  }
-
-  if (editandoVerificacao) {
-    return (
-      <>
-        <h1>Verificacao de Identidade</h1>
-
-        <form onSubmit={handleSubmitVerificacao}>
-          <VerificacaoIdentidade
-            value={fotoVerificacao}
-            origemFoto={origemFotoVerificacao}
-            onChange={handleAtualizarFotoVerificacao}
-            desabilitada={carregando}
-          />
-
-          {erroVerificacaoLocal && (
-            <p className="erro erro-inline">{erroVerificacaoLocal}</p>
-          )}
-
-          <button type="submit" disabled={carregando}>
-            {carregando ? 'Enviando...' : 'Enviar nova foto'}
-          </button>
-        </form>
-
-        <p className="troca-pagina">
-          <button
-            type="button"
-            className="botao-link"
-            onClick={cancelarEdicaoVerificacao}
-          >
-            Cancelar verificacao
           </button>
         </p>
       </>
@@ -374,56 +269,6 @@ function Perfil({
         </div>
       </div>
 
-      <div className="verificacao-box verificacao-box-status">
-        <div className="verificacao-topo">
-          <h2>Verificacao de identidade</h2>
-          <p>
-            Envie uma foto sua pela camera do notebook ou anexando uma imagem da
-            galeria.
-          </p>
-        </div>
-
-        <div className="verificacao-detalhes">
-          <p>
-            <strong>Status:</strong>{' '}
-            <span className={getClasseStatus(usuario.verificacao_status)}>
-              {formatarStatusVerificacao(usuario.verificacao_status)}
-            </span>
-          </p>
-          <p>
-            <strong>Origem da foto:</strong>{' '}
-            {formatarOrigemFoto(usuario.verificacao_origem_foto)}
-          </p>
-          <p>
-            <strong>Ultimo envio:</strong>{' '}
-            {formatarData(usuario.verificacao_data_envio)}
-          </p>
-        </div>
-
-        {usuario.foto_verificacao ? (
-          <div className="foto-preview-box">
-            <img
-              src={usuario.foto_verificacao}
-              alt="Foto de verificacao do usuario"
-              className="foto-preview"
-            />
-            <div className="foto-preview-meta">
-              <p>
-                Esta e a foto oficial usada como referencia para liberar novas
-                publicacoes.
-              </p>
-              <p>
-                Toda foto postada passa por matching facial antes de ser aceita.
-              </p>
-            </div>
-          </div>
-        ) : (
-          <p className="verificacao-hint">
-            Nenhuma foto de verificacao foi enviada ate agora.
-          </p>
-        )}
-      </div>
-
       <div className="verificacao-box">
         <div className="verificacao-topo">
           <h2>Minhas fotos</h2>
@@ -442,10 +287,6 @@ function Perfil({
                   <p>
                     <strong>Publicada em:</strong>{' '}
                     {formatarData(foto.data_postagem)}
-                  </p>
-                  <p>
-                    <strong>Matching:</strong> {foto.modelo_match} liberou a
-                    postagem
                   </p>
                 </div>
               </article>
@@ -468,14 +309,6 @@ function Perfil({
         </button>
         <button
           type="button"
-          className="botao-secundario"
-          onClick={() => setEditandoVerificacao(true)}
-          disabled={carregando}
-        >
-          Atualizar verificacao
-        </button>
-        <button
-          type="button"
           onClick={() => setPostandoFoto(true)}
           disabled={carregando}
         >
@@ -488,14 +321,6 @@ function Perfil({
           disabled={carregando}
         >
           Excluir conta
-        </button>
-        <button
-          type="button"
-          className="botao-secundario"
-          onClick={onSair}
-          disabled={carregando}
-        >
-          Sair
         </button>
       </div>
     </>

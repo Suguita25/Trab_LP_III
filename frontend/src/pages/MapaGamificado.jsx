@@ -43,9 +43,8 @@ function converterArquivoParaBase64(file) {
 }
 
 export default function MapaGamificado({ usuarioLogado }) {
-  const [usuarioId, setUsuarioId] = useState(
-    usuarioLogado?.id ? String(usuarioLogado.id) : ""
-  );
+  const usuarioId = usuarioLogado?.id ? String(usuarioLogado.id) : "";
+  const nomeUsuario = usuarioLogado?.nome || "Usuário não identificado";
   const [locations, setLocations] = useState([]);
   const [loadingLocations, setLoadingLocations] = useState(true);
   const [userLocation, setUserLocation] = useState(null);
@@ -55,12 +54,6 @@ export default function MapaGamificado({ usuarioLogado }) {
   const [pontosDesbloqueados, setPontosDesbloqueados] = useState([]);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    if (usuarioLogado?.id) {
-      setUsuarioId(String(usuarioLogado.id));
-    }
-  }, [usuarioLogado]);
 
   useEffect(() => {
     async function carregarPontos() {
@@ -178,7 +171,7 @@ export default function MapaGamificado({ usuarioLogado }) {
       setError("");
 
       if (!usuarioId.trim()) {
-        setError("Informe o ID do usuário para testar o desbloqueio.");
+        setError("Faça login para desbloquear pontos no mapa.");
         return;
       }
 
@@ -248,14 +241,10 @@ export default function MapaGamificado({ usuarioLogado }) {
 
       <section className="mapa-gamificado__painel">
         <div className="mapa-gamificado__campo">
-          <label htmlFor="usuarioId">ID do usuário</label>
-          <input
-            id="usuarioId"
-            type="number"
-            value={usuarioId}
-            onChange={(e) => setUsuarioId(e.target.value)}
-            placeholder="Ex.: 1"
-          />
+          <span className="mapa-gamificado__campo-label">Usuário</span>
+          <div className="mapa-gamificado__usuario-nome">
+            {nomeUsuario}
+          </div>
         </div>
 
         <button

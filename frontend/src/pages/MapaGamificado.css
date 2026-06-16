@@ -30,13 +30,25 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-width: 260px;
+  max-width: 360px;
   margin-bottom: 16px;
 }
 
-.mapa-gamificado__campo label {
+.mapa-gamificado__campo label,
+.mapa-gamificado__campo-label {
   color: var(--cor-detalhes-claro);
   font-weight: 700;
+}
+
+.mapa-gamificado__usuario-nome {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1.5px solid var(--cor-detalhes);
+  border-radius: var(--radius-sm);
+  background: rgba(1, 43, 27, 0.5);
+  color: var(--cor-detalhes-claro);
+  font-weight: 700;
+  overflow-wrap: anywhere;
 }
 
 .mapa-gamificado__campo input,
