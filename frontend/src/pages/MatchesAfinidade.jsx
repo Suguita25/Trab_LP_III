@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import {
   buscarDetalhesMatchUsuario,
@@ -30,7 +30,80 @@ function resumirLocais(locais) {
   return locais.slice(0, 3).join(', ')
 }
 
+function obterFotosDoMatch(match) {
+  return (match?.fotos_locais_em_comum || []).filter(
+    (fotoLocal) => fotoLocal.foto_usuario_destino
+  )
+}
+
+function obterFotosPublicadasDoMatch(match) {
+  return (match?.fotos_usuario_destino || []).filter((foto) => foto.foto)
+}
+
+function obterFotosPreviewDoMatch(match) {
+  const fotosPublicadas = obterFotosPublicadasDoMatch(match).map((foto) => ({
+    id: `publicada-${foto.id}`,
+    src: foto.foto,
+    alt: `Foto publicada por ${match.usuario_destino_nome}`,
+  }))
+
+  if (fotosPublicadas.length > 0) {
+    return fotosPublicadas
+  }
+
+  return obterFotosDoMatch(match).map((fotoLocal) => ({
+    id: `local-${fotoLocal.ponto_id}`,
+    src: fotoLocal.foto_usuario_destino,
+    alt: `Foto de ${match.usuario_destino_nome} em ${fotoLocal.ponto_nome}`,
+  }))
+}
+
+function FotosPreviewMatch({ match, className = '' }) {
+  const fotos = obterFotosPreviewDoMatch(match).slice(0, 3)
+
+  if (fotos.length === 0) return null
+
+  return (
+    <div className={`match-card__fotos ${className}`.trim()}>
+      {fotos.map((foto) => (
+        <img key={foto.id} src={foto.src} alt={foto.alt} />
+      ))}
+    </div>
+  )
+}
+
+function FotosPublicadasDetalhe({ match }) {
+  const fotos = obterFotosPublicadasDoMatch(match)
+
+  if (fotos.length === 0) return null
+
+  return (
+    <div className="matches-detalhe__fotos">
+      <h4>Fotos de {match.usuario_destino_nome}</h4>
+
+      <div className="matches-detalhe__fotos-grid">
+        {fotos.map((foto) => (
+          <article
+            key={foto.id}
+            className="matches-detalhe__foto-card"
+          >
+            <img
+              src={foto.foto}
+              alt={`Foto publicada por ${match.usuario_destino_nome}`}
+            />
+            <div>
+              <strong>Foto publicada</strong>
+              <span>{formatarData(foto.data_postagem)}</span>
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function MatchesAfinidade({ usuarioLogado }) {
+  const detalhesPanelRef = useRef(null)
   const [matches, setMatches] = useState([])
   const [interacoes, setInteracoes] = useState([])
   const [matchSelecionadoId, setMatchSelecionadoId] = useState(null)
@@ -181,6 +254,17 @@ export default function MatchesAfinidade({ usuarioLogado }) {
     }
   }
 
+  function handleSelecionarMatch(outroUsuarioId) {
+    setMatchSelecionadoId(outroUsuarioId)
+
+    requestAnimationFrame(() => {
+      detalhesPanelRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      })
+    })
+  }
+
   if (!usuarioLogado) {
     return (
       <div className="matches-afinidade">
@@ -257,9 +341,7 @@ export default function MatchesAfinidade({ usuarioLogado }) {
                     <button
                       type="button"
                       className="match-card__detalhe"
-                      onClick={() =>
-                        setMatchSelecionadoId(match.usuario_destino_id)
-                      }
+                      onClick={() => handleSelecionarMatch(match.usuario_destino_id)}
                     >
                       <div className="match-card__topo">
                         <div>
@@ -275,6 +357,8 @@ export default function MatchesAfinidade({ usuarioLogado }) {
                       <p className="match-card__resumo">
                         {resumirLocais(match.locais_em_comum)}
                       </p>
+
+                      <FotosPreviewMatch match={match} />
                     </button>
 
                     <div className="match-card__acoes">
@@ -309,7 +393,7 @@ export default function MatchesAfinidade({ usuarioLogado }) {
           )}
         </div>
 
-        <div className="matches-afinidade__painel">
+        <div className="matches-afinidade__painel" ref={detalhesPanelRef}>
           <div className="matches-afinidade__painel-topo">
             <h2>Detalhes da afinidade</h2>
             {detalhesMatch && (
@@ -369,6 +453,32 @@ export default function MatchesAfinidade({ usuarioLogado }) {
                   <p>Nenhum local compartilhado ate o momento.</p>
                 )}
               </div>
+
+              <FotosPublicadasDetalhe match={detalhesMatch} />
+
+              {obterFotosDoMatch(detalhesMatch).length > 0 && (
+                <div className="matches-detalhe__fotos">
+                  <h4>Fotos do match nos pontos em comum</h4>
+
+                  <div className="matches-detalhe__fotos-grid">
+                    {obterFotosDoMatch(detalhesMatch).map((fotoLocal) => (
+                      <article
+                        key={fotoLocal.ponto_id}
+                        className="matches-detalhe__foto-card"
+                      >
+                        <img
+                          src={fotoLocal.foto_usuario_destino}
+                          alt={`Foto de ${detalhesMatch.usuario_destino_nome} em ${fotoLocal.ponto_nome}`}
+                        />
+                        <div>
+                          <strong>{fotoLocal.ponto_nome}</strong>
+                          <span>{detalhesMatch.usuario_destino_nome}</span>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="match-card__acoes">
                 <button
@@ -434,6 +544,11 @@ export default function MatchesAfinidade({ usuarioLogado }) {
                 <p className="interacao-card__meta">
                   Locais: {resumirLocais(interacao.locais_em_comum)}
                 </p>
+
+                <FotosPreviewMatch
+                  className="interacao-card__fotos"
+                  match={interacao}
+                />
               </article>
             ))}
           </div>

@@ -251,6 +251,25 @@
   font-size: 1.4rem;
 }
 
+.galeria-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.galeria-topo h2 {
+  margin: 0;
+}
+
+.botao-galeria-editar {
+  width: auto !important;
+  margin-top: 0 !important;
+  padding: 10px 14px !important;
+  white-space: nowrap;
+}
+
 .verificacao-topo p,
 .verificacao-detalhes p,
 .foto-preview-meta p,
@@ -311,9 +330,10 @@
   width: 180px;
   max-width: 40%;
   aspect-ratio: 3 / 4;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: 12px;
   border: 1px solid var(--cor-detalhes);
+  background: rgba(1, 43, 27, 0.55);
   flex-shrink: 0;
 }
 
@@ -377,8 +397,9 @@
 .foto-publicada-img {
   width: 100%;
   aspect-ratio: 4 / 3;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
+  background: rgba(1, 43, 27, 0.55);
 }
 
 .foto-publicada-meta {
@@ -389,6 +410,12 @@
   margin: 0 0 8px;
   color: var(--cor-detalhes-claro);
   line-height: 1.5;
+}
+
+.botao-excluir-foto {
+  margin-top: 10px !important;
+  padding: 10px 12px !important;
+  font-size: 0.95rem !important;
 }
 
 .botao-secundario {
@@ -565,6 +592,15 @@
 
   .galeria-fotos {
     grid-template-columns: 1fr;
+  }
+
+  .galeria-topo {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .botao-galeria-editar {
+    width: 100% !important;
   }
 }
 

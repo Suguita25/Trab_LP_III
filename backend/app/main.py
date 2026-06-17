@@ -390,6 +390,32 @@ def postar_foto_usuario(
     return nova_foto
 
 
+@app.delete("/usuarios/{usuario_id}/fotos/{foto_id}")
+def deletar_foto_usuario(
+    usuario_id: int,
+    foto_id: int,
+    db: Session = Depends(get_db),
+):
+    buscar_usuario_ou_404(db, usuario_id)
+
+    foto = (
+        db.query(FotoPostada)
+        .filter(
+            FotoPostada.id == foto_id,
+            FotoPostada.usuario_id == usuario_id,
+        )
+        .first()
+    )
+
+    if not foto:
+        raise HTTPException(status_code=404, detail="Foto nao encontrada")
+
+    db.delete(foto)
+    db.commit()
+
+    return {"mensagem": "Foto removida com sucesso"}
+
+
 @app.get("/locations", response_model=list[TuristicPointResponse])
 def listar_pontos_turisticos(db: Session = Depends(get_db)):
     return (
@@ -509,6 +535,7 @@ def desbloquear_ponto_turistico(
         pontos_ganhos=ponto.pontos_valor,
         pontos_totais_usuario=usuario.pontos_totais,
         badge=badge.nome if badge else None,
+        foto=dados.foto,
     )
 
 @app.get(
@@ -519,16 +546,28 @@ def listar_desbloqueios_usuario(usuario_id: int, db: Session = Depends(get_db)):
     buscar_usuario_ou_404(db, usuario_id)
 
     desbloqueios = (
-        db.query(DesbloqueioPonto)
+        db.query(DesbloqueioPonto, TuristicPoint.nome)
+        .join(TuristicPoint, TuristicPoint.id == DesbloqueioPonto.ponto_id)
         .filter(DesbloqueioPonto.usuario_id == usuario_id)
+        .order_by(DesbloqueioPonto.data_desbloqueio.desc())
         .all()
     )
 
-    pontos_ids = [desbloqueio.ponto_id for desbloqueio in desbloqueios]
+    pontos_ids = [desbloqueio.ponto_id for desbloqueio, _ in desbloqueios]
 
     return UsuarioDesbloqueiosResponse(
         usuario_id=usuario_id,
         pontos_desbloqueados=pontos_ids,
+        desbloqueios=[
+            {
+                "id": desbloqueio.id,
+                "ponto_id": desbloqueio.ponto_id,
+                "ponto_nome": ponto_nome,
+                "foto": desbloqueio.foto,
+                "data_desbloqueio": desbloqueio.data_desbloqueio,
+            }
+            for desbloqueio, ponto_nome in desbloqueios
+        ],
     )
 
 
@@ -650,6 +689,25 @@ def ignorar_match_usuario(
 @app.delete("/usuarios/{usuario_id}")
 def deletar_usuario(usuario_id: int, db: Session = Depends(get_db)):
     usuario = buscar_usuario_ou_404(db, usuario_id)
+
+    (
+        db.query(Match)
+        .filter(
+            (Match.usuario_origem_id == usuario_id)
+            | (Match.usuario_destino_id == usuario_id)
+        )
+        .delete(synchronize_session=False)
+    )
+    (
+        db.query(FotoPostada)
+        .filter(FotoPostada.usuario_id == usuario_id)
+        .delete(synchronize_session=False)
+    )
+    (
+        db.query(DesbloqueioPonto)
+        .filter(DesbloqueioPonto.usuario_id == usuario_id)
+        .delete(synchronize_session=False)
+    )
 
     db.delete(usuario)
     db.commit()

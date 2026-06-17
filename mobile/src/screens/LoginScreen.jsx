@@ -288,6 +288,7 @@ export default function LoginScreen() {
                 {fotoVerificacao ? (
                   <View style={styles.previewCard}>
                     <Image
+                      resizeMode="contain"
                       source={{ uri: fotoVerificacao.uri }}
                       style={styles.previewImage}
                     />
@@ -538,6 +539,7 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   previewImage: {
+    backgroundColor: theme.colors.surfaceAlt,
     borderColor: theme.colors.borderSoft,
     borderRadius: theme.radius.md,
     borderWidth: 1,

@@ -95,6 +95,12 @@ export function postarFotoUsuario(id, { foto, origemFoto }) {
   })
 }
 
+export function excluirFotoUsuario(id, fotoId) {
+  return request(`/usuarios/${id}/fotos/${fotoId}`, {
+    method: 'DELETE',
+  })
+}
+
 export function excluirUsuario(id) {
   return request(`/usuarios/${id}`, {
     method: 'DELETE',

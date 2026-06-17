@@ -28,6 +28,10 @@ export default defineConfig({
         target: 'http://backend:8000',
         changeOrigin: true,
       },
+      '/locations': {
+        target: 'http://backend:8000',
+        changeOrigin: true,
+      },
     },
   },
 })

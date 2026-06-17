@@ -42,6 +42,38 @@ function converterArquivoParaBase64(file) {
   });
 }
 
+function normalizarSnapshotDesbloqueios(data) {
+  const pontosIds = new Set(
+    (data?.pontos_desbloqueados || [])
+      .map((pontoId) => Number(pontoId))
+      .filter((pontoId) => Number.isFinite(pontoId))
+  );
+
+  const fotosPorPonto = (data?.desbloqueios || []).reduce(
+    (acc, desbloqueio) => {
+      const pontoId = Number(desbloqueio.ponto_id);
+
+      if (!Number.isFinite(pontoId)) {
+        return acc;
+      }
+
+      pontosIds.add(pontoId);
+
+      if (desbloqueio.foto) {
+        acc[pontoId] = desbloqueio.foto;
+      }
+
+      return acc;
+    },
+    {}
+  );
+
+  return {
+    pontosDesbloqueados: Array.from(pontosIds),
+    fotosPorPonto,
+  };
+}
+
 export default function MapaGamificado({ usuarioLogado }) {
   const usuarioId = usuarioLogado?.id ? String(usuarioLogado.id) : "";
   const nomeUsuario = usuarioLogado?.nome || "Usuário não identificado";
@@ -52,6 +84,7 @@ export default function MapaGamificado({ usuarioLogado }) {
   const [selectedFiles, setSelectedFiles] = useState({});
   const [unlockingPointId, setUnlockingPointId] = useState(null);
   const [pontosDesbloqueados, setPontosDesbloqueados] = useState([]);
+  const [fotosDesbloqueios, setFotosDesbloqueios] = useState({});
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -74,22 +107,30 @@ export default function MapaGamificado({ usuarioLogado }) {
   }, []);
 
   useEffect(() => {
-  async function carregarDesbloqueios() {
-    if (!usuarioId.trim()) {
-      setPontosDesbloqueados([]);
-      return;
+    async function carregarDesbloqueios() {
+      if (!usuarioId.trim()) {
+        setPontosDesbloqueados([]);
+        setFotosDesbloqueios({});
+        return;
+      }
+
+      try {
+        const data = await getUnlockedPoints(usuarioId);
+        const snapshot = normalizarSnapshotDesbloqueios(data);
+
+        setPontosDesbloqueados(snapshot.pontosDesbloqueados);
+        setFotosDesbloqueios(snapshot.fotosPorPonto);
+      } catch (err) {
+        console.error("erro ao carregar desbloqueios:", err);
+        setError(
+          err.message ||
+            "Nao foi possivel carregar seus desbloqueios salvos agora."
+        );
+      }
     }
 
-    try {
-      const data = await getUnlockedPoints(usuarioId);
-      setPontosDesbloqueados(data.pontos_desbloqueados || []);
-    } catch (err) {
-      console.error("erro ao carregar desbloqueios:", err);
-    }
-  }
-
-  carregarDesbloqueios();
-}, [usuarioId]);
+    carregarDesbloqueios();
+  }, [usuarioId]);
 
   function solicitarLocalizacao() {
     setLocationError("");
@@ -203,6 +244,10 @@ export default function MapaGamificado({ usuarioLogado }) {
       setPontosDesbloqueados((prev) =>
         prev.includes(location.id) ? prev : [...prev, location.id]
       );
+      setFotosDesbloqueios((prev) => ({
+        ...prev,
+        [location.id]: response.foto || fotoBase64,
+      }));
 
       setMessage(
         `${response.mensagem} Pontos ganhos: ${response.pontos_ganhos}. Pontos totais: ${response.pontos_totais_usuario}.`
@@ -339,6 +384,13 @@ export default function MapaGamificado({ usuarioLogado }) {
                   {location.distanciaCalculada === null
                     ? "obtenha a localização"
                     : `${location.distanciaCalculada.toFixed(2)} m`}
+                  {fotosDesbloqueios[location.id] && (
+                    <img
+                      src={fotosDesbloqueios[location.id]}
+                      alt={`Foto anexada em ${location.nome}`}
+                      className="mapa-gamificado__popup-foto"
+                    />
+                  )}
                 </Popup>
               </CircleMarker>
             ))}
@@ -426,6 +478,15 @@ export default function MapaGamificado({ usuarioLogado }) {
                       : `${location.distanciaCalculada.toFixed(2)} m`}
                   </span>
                 </div>
+
+                {fotosDesbloqueios[location.id] && (
+                  <div className="mapa-gamificado__foto-desbloqueio">
+                    <img
+                      src={fotosDesbloqueios[location.id]}
+                      alt={`Foto anexada em ${location.nome}`}
+                    />
+                  </div>
+                )}
 
                 <div className="mapa-gamificado__acoes">
                   <input

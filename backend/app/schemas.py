@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class UsuarioCreate(BaseModel):
@@ -104,6 +104,7 @@ class DesbloqueioPontoResponse(BaseModel):
     pontos_ganhos: int
     pontos_totais_usuario: int
     badge: str | None = None
+    foto: str | None = None
 
 
 class DesbloqueioPontoCreate(BaseModel):
@@ -126,9 +127,35 @@ class ValidacaoProximidadeResponse(BaseModel):
     raio_desbloqueio: float
 
 
+class DesbloqueioPontoUsuarioResponse(BaseModel):
+    id: int
+    ponto_id: int
+    ponto_nome: str
+    foto: str
+    data_desbloqueio: datetime
+
+
 class UsuarioDesbloqueiosResponse(BaseModel):
     usuario_id: int
     pontos_desbloqueados: list[int]
+    desbloqueios: list[DesbloqueioPontoUsuarioResponse] = Field(
+        default_factory=list
+    )
+
+
+class MatchFotoLocalResponse(BaseModel):
+    ponto_id: int
+    ponto_nome: str
+    foto_usuario_origem: str | None = None
+    foto_usuario_destino: str | None = None
+    data_usuario_origem: datetime | None = None
+    data_usuario_destino: datetime | None = None
+
+
+class MatchFotoUsuarioResponse(BaseModel):
+    id: int
+    foto: str
+    data_postagem: datetime
 
 
 class MatchRecommendationResponse(BaseModel):
@@ -138,6 +165,12 @@ class MatchRecommendationResponse(BaseModel):
     score_afinidade: float
     status: str
     locais_em_comum: list[str]
+    fotos_usuario_destino: list[MatchFotoUsuarioResponse] = Field(
+        default_factory=list
+    )
+    fotos_locais_em_comum: list[MatchFotoLocalResponse] = Field(
+        default_factory=list
+    )
 
     class Config:
         from_attributes = True

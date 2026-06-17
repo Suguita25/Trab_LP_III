@@ -312,7 +312,11 @@ export default function PointDetailModal({ point, visible, onClose }) {
               ) : null}
 
               {selectedPhoto ? (
-                <Image source={{ uri: selectedPhoto.uri }} style={styles.previewImage} />
+                <Image
+                  resizeMode="contain"
+                  source={{ uri: selectedPhoto.uri }}
+                  style={styles.previewImage}
+                />
               ) : null}
             </View>
 
@@ -509,6 +513,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   previewImage: {
+    backgroundColor: theme.colors.surfaceAlt,
     borderColor: theme.colors.borderSoft,
     borderWidth: 1,
     borderRadius: theme.radius.md,

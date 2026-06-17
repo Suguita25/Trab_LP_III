@@ -22,16 +22,19 @@ function Perfil({
   resumoGamificacao,
   onSalvarEdicao,
   onPostarFoto,
+  onExcluirFoto,
   onExcluirConta,
   carregando,
 }) {
   const [editandoDados, setEditandoDados] = useState(false)
   const [postandoFoto, setPostandoFoto] = useState(false)
+  const [editandoGaleria, setEditandoGaleria] = useState(false)
   const [nome, setNome] = useState(usuario?.nome || '')
   const [email, setEmail] = useState(usuario?.email || '')
   const [senha, setSenha] = useState('')
   const [fotoPostagem, setFotoPostagem] = useState('')
   const [origemFotoPostagem, setOrigemFotoPostagem] = useState('')
+  const [fotoExcluindoId, setFotoExcluindoId] = useState(null)
   const [erroPostagemLocal, setErroPostagemLocal] = useState('')
 
   const progresso = resumoGamificacao || {
@@ -88,6 +91,28 @@ function Perfil({
     if (!confirmou) return
 
     await onExcluirConta()
+  }
+
+  async function handleExcluirFoto(fotoId) {
+    const confirmou = window.confirm(
+      'Tem certeza que deseja excluir esta foto?'
+    )
+
+    if (!confirmou) return
+
+    setFotoExcluindoId(fotoId)
+
+    try {
+      await onExcluirFoto(fotoId)
+
+      if (fotos.length <= 1) {
+        setEditandoGaleria(false)
+      }
+    } catch {
+      // O feedback global da tela ja exibe o detalhe da API.
+    } finally {
+      setFotoExcluindoId(null)
+    }
   }
 
   function handleAtualizarFotoPostagem({
@@ -270,8 +295,19 @@ function Perfil({
       </div>
 
       <div className="verificacao-box">
-        <div className="verificacao-topo">
+        <div className="verificacao-topo galeria-topo">
           <h2>Minhas fotos</h2>
+
+          {fotos.length > 0 && (
+            <button
+              type="button"
+              className="botao-secundario botao-galeria-editar"
+              onClick={() => setEditandoGaleria((editando) => !editando)}
+              disabled={carregando}
+            >
+              {editandoGaleria ? 'Concluir edicao' : 'Editar galeria'}
+            </button>
+          )}
         </div>
 
         {fotos.length > 0 ? (
@@ -288,6 +324,19 @@ function Perfil({
                     <strong>Publicada em:</strong>{' '}
                     {formatarData(foto.data_postagem)}
                   </p>
+
+                  {editandoGaleria && (
+                    <button
+                      type="button"
+                      className="botao-perigo botao-excluir-foto"
+                      onClick={() => handleExcluirFoto(foto.id)}
+                      disabled={carregando}
+                    >
+                      {fotoExcluindoId === foto.id
+                        ? 'Excluindo...'
+                        : 'Excluir foto'}
+                    </button>
+                  )}
                 </div>
               </article>
             ))}

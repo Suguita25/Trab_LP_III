@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useAppContext } from "../context/AppContext";
 import LoginScreen from "../screens/LoginScreen";
 import MapScreen from "../screens/MapScreen";
+import MatchesScreen from "../screens/MatchesScreen";
 import ProgressScreen from "../screens/ProgressScreen";
 import { theme } from "../styles/theme";
 
@@ -82,6 +83,14 @@ function LoggedArea() {
           options={{
             headerTitle: () => <BrandHeaderTitle subtitle="Seu progresso" />,
             tabBarLabel: "Progresso",
+          }}
+        />
+        <Tab.Screen
+          component={MatchesScreen}
+          name="Afinidade"
+          options={{
+            headerTitle: () => <BrandHeaderTitle subtitle="Matches por afinidade" />,
+            tabBarLabel: "Afinidade",
           }}
         />
       </Tab.Navigator>

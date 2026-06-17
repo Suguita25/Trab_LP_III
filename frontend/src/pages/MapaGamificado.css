@@ -204,6 +204,33 @@
   line-height: 1.4;
 }
 
+.mapa-gamificado__foto-desbloqueio {
+  margin-bottom: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 225, 146, 0.28);
+  border-radius: 12px;
+  background: rgba(255, 225, 146, 0.06);
+}
+
+.mapa-gamificado__foto-desbloqueio img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: contain;
+  background: rgba(1, 43, 27, 0.55);
+}
+
+.mapa-gamificado__popup-foto {
+  display: block;
+  width: 180px;
+  max-width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: contain;
+  background: rgba(1, 43, 27, 0.55);
+  margin-top: 10px;
+  border-radius: 8px;
+}
+
 .mapa-gamificado__acoes {
   display: flex;
   flex-direction: column;

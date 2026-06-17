@@ -12,6 +12,7 @@ import {
   atualizarUsuario,
   buscarUsuarioPorEmail,
   cadastrarUsuario,
+  excluirFotoUsuario,
   excluirUsuario,
   listarFotosUsuario,
   loginUsuario,
@@ -253,6 +254,27 @@ function App() {
     }
   }
 
+  async function handleExcluirFoto(fotoId) {
+    if (!usuarioLogado) return
+
+    limparFeedback()
+    setCarregando(true)
+
+    try {
+      const resposta = await excluirFotoUsuario(usuarioLogado.id, fotoId)
+
+      setFotosUsuario((fotosAtuais) =>
+        fotosAtuais.filter((foto) => foto.id !== fotoId)
+      )
+      setMensagem(resposta.mensagem || 'Foto excluida com sucesso.')
+    } catch (err) {
+      setErro(err.message)
+      throw err
+    } finally {
+      setCarregando(false)
+    }
+  }
+
   async function handleExcluirConta() {
     if (!usuarioLogado) return
 
@@ -335,6 +357,7 @@ function App() {
                   resumoGamificacao={resumoGamificacao}
                   onSalvarEdicao={handleSalvarEdicao}
                   onPostarFoto={handlePostarFoto}
+                  onExcluirFoto={handleExcluirFoto}
                   onExcluirConta={handleExcluirConta}
                   carregando={carregando}
                 />
